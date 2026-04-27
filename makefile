@@ -22,10 +22,12 @@ MAIN_OBJS := $(SRCS:%.cpp=$(BUILD_DIR)/src-%.o)
 MAGS_DIR = $(SRC_DIR)/mags-logger
 MAGS_SRCS =\
     nmea_sentence_reader.cpp\
-    mags_logger.cpp
+    mags_logger.cpp\
+    mags_calculator.cpp
 MAGS_DEPS = \
     $(MAGS_DIR)/nmea_sentence_reader.h\
-    $(MAGS_DIR)/mags_logger.h
+    $(MAGS_DIR)/mags_logger.h\
+    $(MAGS_DIR)/mags_calculator.h
 MAGS_OBJS := $(MAGS_SRCS:%.cpp=$(BUILD_DIR)/mags-logger-%.o)
 
 

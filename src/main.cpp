@@ -7,6 +7,7 @@
 #include "config.h"
 #include "mags-logger/mags_logger.h"
 #include "mags-logger/nmea_sentence_reader.h"
+#include "mags-logger/mags_calculator.h"
 
 void segHandler(int sig)
 {
@@ -67,6 +68,13 @@ int main(int argc, char* argv[])
     logInfo("MAGS_FULL_TRACE_ENABLED: %d", (int)MagsLogger::MAGS_FULL_TRACE_ENABLED);
 
     magsLogger.start();
+
+    MagsCalculator::WINDOW_SIZE = Config::readInt("mags/windowSize", MagsCalculator::WINDOW_SIZE);
+    logInfo("WINDOW_SIZE: %d", (int)MagsCalculator::WINDOW_SIZE);
+
+    MagsCalculator magsCalculator;
+    magsLogger.setMagsDataListener(&magsCalculator);
+    magsCalculator.start();
 
     while (true) {
         if (!connection || !connection->isConnected()) {
