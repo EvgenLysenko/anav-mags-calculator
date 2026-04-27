@@ -12,7 +12,7 @@ public:
     TaskBase() {};
     virtual ~TaskBase();
 
-    protected:
+protected:
     std::thread _thread;
     bool _isStopped = true;
 
@@ -25,6 +25,8 @@ public:
     virtual __useconds_t loop(__useconds_t default_timeout) = 0;
 
     virtual void onStarted();
+
+    static __useconds_t ms2Time(uint32_t milliseconds) { return (__useconds_t)(milliseconds * 1000); } 
 };
 
 #endif
