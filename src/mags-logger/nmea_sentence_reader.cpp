@@ -15,6 +15,7 @@ int NmeaSentenceReader::send(const unsigned char* buffer, int length)
     std::lock_guard lock(sendMutex);
 
     if (sendLength == 0) {
+        logInfo("send: %d", length);
         if (length > SEND_BUFFER_SIZE)
             length = SEND_BUFFER_SIZE;
 
@@ -100,9 +101,12 @@ void NmeaSentenceReader::processSend()
 {
     std::lock_guard lock(sendMutex);
 
-    int sentBytes = connection->send(sendBuf, sendLength);
-
-    sendLength = 0;
+    if (sendLength > 0) {
+        logInfo("connection->send: %d", sendLength);
+        int sentBytes = connection->send(sendBuf, sendLength);
+        if (sentBytes)
+            sendLength = 0;
+    }
 }
 
 void NmeaSentenceReader::onNmeaSentenceReceived(const unsigned char* buffer, int length)
