@@ -54,10 +54,19 @@ CON_DEPS = \
     $(CON_DIR)/com_connection.h
 CON_OBJS := $(CON_SRCS:%.cpp=$(BUILD_DIR)/connection-%.o)
 
+MAV_DIR = $(SRC_DIR)/mav
+MAV_SRCS = \
+    mavlink_provider.cpp\
+    mavlink_provider_messages.cpp
+MAV_DEPS = \
+    $(MAV_DIR)/flight_mode.h\
+    $(MAV_DIR)/mavlink_provider.h
+MAV_OBJS := $(MAV_SRCS:%.cpp=$(BUILD_DIR)/mav-%.o)
+
 LIB_LOGURU_SRCS := $(shell find $(LIB_DIR)/loguru -name '*.cpp' -or -name '*.c' -or -name '*.s')
 LIB_LOGURU_OBJS := $(LIB_LOGURU_SRCS:$(LIB_DIR)/loguru/%.cpp=$(BUILD_DIR)/lib-loguru-%.o)
 
-OBJS = $(MAIN_OBJS) $(MAGS_OBJS) $(UTILS_OBJS) $(CON_OBJS) $(LIB_LOGURU_OBJS)
+OBJS = $(MAIN_OBJS) $(MAGS_OBJS) $(MAV_OBJS) $(UTILS_OBJS) $(CON_OBJS) $(LIB_LOGURU_OBJS)
 
 $(BUILD_DIR)/lib-loguru-%.o: $(LIB_DIR)/loguru/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -66,6 +75,9 @@ $(BUILD_DIR)/connection-%.o: $(CON_DIR)/%.cpp $(CON_DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(BUILD_DIR)/utils-%.o: $(UTILS_DIR)/%.cpp $(UTILS_DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(BUILD_DIR)/mav-%.o: $(MAV_DIR)/%.cpp $(MAV_DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(BUILD_DIR)/mags-logger-%.o: $(MAGS_DIR)/%.cpp $(MAGS_DEPS)
