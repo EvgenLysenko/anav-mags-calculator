@@ -7,6 +7,7 @@ class ComConnection: public Connection
 {
 protected:
     int fd;
+    int connectionResult;
 
 public:
     ComConnection(const Connection::Credentials& credentials);
@@ -14,7 +15,7 @@ public:
 
     virtual bool connect();
     virtual void disconnect();
-    virtual bool isConnected() const;
+    virtual bool isConnected() const { return fd >= 0 && connectionResult == 0; }
     virtual int send(const unsigned char* buf, int size);
     virtual int read(unsigned char* buf, int size);
 

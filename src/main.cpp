@@ -34,34 +34,48 @@ void logsInit(int argc, char* argv[])
     loguru::add_file("mags-logger.log", loguru::Append, loguru::Verbosity_MAX);
 }
 
+static Connection* createConnection(const char* name, const Connection::Credentials& credentials)
+{
+    logInfo("main - %s connection: type: \"%s\" address: \"%s\" port: \"%d\"", name, credentials.type.c_str(), credentials.address.c_str(), credentials.port);
+
+    Connection* connection = ConnectionFactory::create(credentials);
+    if (connection) {
+        logInfo("main - %s connection: created", name);
+        bool result = connection->connect();
+        logInfo("main - %s connection: connect: %d", name, (int)result);
+    }
+    else {
+        logError("main - %s connection: creating failed", name);
+    }
+
+    logInfo("main - %s connection: connected: %d", name, (int)connection->isConnected());
+
+    return connection;
+}
+
 int main(int argc, char* argv[])
 {
     signal(SIGSEGV, segHandler);
 
     logsInit(argc, argv);
 
+    // mavlink
     Connection::Credentials credentials;
-    credentials.type = Config::readString("connection/type", Connection::Credentials::COM);
-    credentials.address = Config::readString("connection/address", "/dev/ttyS1");
-    credentials.port = Config::readInt("connection/port", 115200);
+    credentials.type = Config::readString("mavlink/connection/type", Connection::Credentials::COM);
+    credentials.address = Config::readString("mavlink/connection/address", "/dev/ttyS1");
+    credentials.port = Config::readInt("mavlink/connection/port", 115200);
 
-    logInfo("connection - mags : type: \"%s\" address: \"%s\" port: \"%d\"", credentials.type.c_str(), credentials.address.c_str(), credentials.port);
+    Connection* mavConnection = createConnection("mavlink", credentials);
+    MavlinkProvider mavlinkProvider(mavConnection);
 
-    Connection* connection = ConnectionFactory::create(credentials);
-    if (connection) {
-        logInfo("connection - mags created");
-        bool result = connection->connect();
-        logInfo("connection - mags connect: %d", (int)result);
-    }
-    else {
-        logError("connection - mags creating failed");
-    }
+    // sensors
+    credentials.type = Config::readString("mags/connection/type", Connection::Credentials::COM);
+    credentials.address = Config::readString("mags/connection/address", "/dev/ttyS2");
+    credentials.port = Config::readInt("mags/connection/port", 115200);
 
-    logInfo("connection - mags connected: %d", (int)connection->isConnected());
-
-    NmeaSentenceReader nmeaSentenceReader(connection);
-
-    MagsLogger magsLogger(&nmeaSentenceReader);
+    Connection* magsConnection = createConnection("mags", credentials);
+    NmeaSentenceReader nmeaSentenceReader(magsConnection);
+    MagsLogger magsLogger(&nmeaSentenceReader, &mavlinkProvider);
     nmeaSentenceReader.addNmeaSentenceListener(&magsLogger);
 
     MagsLogger::MAGS_FULL_TRACE_ENABLED = Config::readBool("debug/trace", false);
@@ -69,6 +83,7 @@ int main(int argc, char* argv[])
 
     magsLogger.start();
 
+    // calculator
     MagsCalculator::WINDOW_SIZE = Config::readInt("mags/windowSize", MagsCalculator::WINDOW_SIZE);
     logInfo("WINDOW_SIZE: %d", (int)MagsCalculator::WINDOW_SIZE);
 
@@ -77,7 +92,7 @@ int main(int argc, char* argv[])
     magsCalculator.start();
 
     while (true) {
-        if (!connection || !connection->isConnected()) {
+        if (!magsConnection || !magsConnection->isConnected()) {
             //logInfo("connection lost");
             //break;
         }
@@ -91,9 +106,9 @@ int main(int argc, char* argv[])
 
     logInfo("stop");
 
-    if (connection) {
-        connection->disconnect();
-        delete connection;
+    if (magsConnection) {
+        magsConnection->disconnect();
+        delete magsConnection;
     }
 
     logInfo("exit");

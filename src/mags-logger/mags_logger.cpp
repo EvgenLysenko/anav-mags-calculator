@@ -27,9 +27,15 @@ static const long LOG_OUT_PERIOD_MIN = 1000;
 const unsigned short MAGS_CCR_DEFAULT = 100;
 const unsigned short MAGS_CCR_MAX = 0xFFFF;
 
-MagsLogger::MagsLogger(INmeaSentenceSender* nmeaSentenceSender):
+static const long STATUS_SEND_PERIOD = 1000;
+static const long SENSORS_SEND_PERIOD = 5000;
+static const long SETTINGS_SEND_PERIOD = 10000;
+static const long MAGS_VALUES_SEND_PERIOD = 3000; 
+
+MagsLogger::MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider* mavlinkProvider):
     TaskBase(),
-    nmeaSentenceSender(nmeaSentenceSender)
+    nmeaSentenceSender(nmeaSentenceSender),
+    mavlinkProvider(mavlinkProvider)
 {
     ccrGetRequester.init(nmeaSentenceSender);
     ccrSetRequester.init(nmeaSentenceSender);
@@ -352,6 +358,59 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
     if (!logStarted) {
         startLogging();
     }
+
+    // dispatcher
+    if (magsInitialized) {
+        // message for MP - mags is online
+        if (mavlinkProvider->isGscReady()) {
+            static bool magsStartedMessageSent = false;
+            if (!magsStartedMessageSent) {
+                magsStartedMessageSent = true;
+
+                mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - started");
+            }
+
+            static bool magsOnlineMessageSent = false;
+            if (!magsOnlineMessageSent) {
+                if (magsReceivedCounter.count > 0) {
+                    magsOnlineMessageSent = true;
+
+                    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - online");
+
+                    sendStatus();
+                }
+            }
+        }
+    }     
+    static long sendStatusTime = curTime;
+    if (TimeUtils::isTimeout(curTime, sendStatusTime, STATUS_SEND_PERIOD)) {
+        sendStatus();
+        sendStatusTime = curTime;
+    }
+
+    static long sendSensorTime = curTime;
+    if (TimeUtils::isTimeout(curTime, sendSensorTime, SENSORS_SEND_PERIOD)) {
+        sendSensorStatus();
+        sendSensorTime = curTime;
+    }
+
+    static long sendSettingsTime = curTime;
+    if (TimeUtils::isTimeout(curTime, sendSettingsTime, SETTINGS_SEND_PERIOD)) {
+        sendSettings();
+        sendSettingsTime = curTime;
+    }
+
+    static long sendMagsValuesTime = curTime;
+    if (TimeUtils::isTimeout(curTime, sendMagsValuesTime, MAGS_VALUES_SEND_PERIOD)) {
+        if (outMagsDetected)
+            sendMagsValues();
+
+        if (outAccelDetected)
+            sendAccelValues();
+
+        sendMagsValuesTime = curTime;
+    }
+    // dispatcher
 
     ccrGetRequester.loop();
     ccrSetRequester.loop();

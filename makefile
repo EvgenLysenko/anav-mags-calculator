@@ -23,13 +23,13 @@ MAGS_DIR = $(SRC_DIR)/mags-logger
 MAGS_SRCS =\
     nmea_sentence_reader.cpp\
     mags_logger.cpp\
-    mags_calculator.cpp
+    mags_calculator.cpp\
+    mags_dispatcher.cpp
 MAGS_DEPS = \
     $(MAGS_DIR)/nmea_sentence_reader.h\
     $(MAGS_DIR)/mags_logger.h\
     $(MAGS_DIR)/mags_calculator.h
 MAGS_OBJS := $(MAGS_SRCS:%.cpp=$(BUILD_DIR)/mags-logger-%.o)
-
 
 UTILS_DIR = $(SRC_DIR)/utils
 UTILS_SRCS = \
@@ -42,6 +42,15 @@ UTILS_DEPS = \
     $(UTILS_DIR)/parse_utils.h\
     $(UTILS_DIR)/CsvParser.h
 UTILS_OBJS := $(UTILS_SRCS:%.cpp=$(BUILD_DIR)/utils-%.o)
+
+COMMON_DIR = $(SRC_DIR)/common
+COMMON_SRCS = \
+    location.cpp
+COMMON_DEPS = \
+    $(COMMON_DIR)/attitude.h\
+    $(COMMON_DIR)/position.h\
+    $(COMMON_DIR)/location.h
+COMMON_OBJS := $(COMMON_SRCS:%.cpp=$(BUILD_DIR)/common-%.o)
 
 CON_DIR = $(SRC_DIR)/connection
 CON_SRCS =\
@@ -66,7 +75,10 @@ MAV_OBJS := $(MAV_SRCS:%.cpp=$(BUILD_DIR)/mav-%.o)
 LIB_LOGURU_SRCS := $(shell find $(LIB_DIR)/loguru -name '*.cpp' -or -name '*.c' -or -name '*.s')
 LIB_LOGURU_OBJS := $(LIB_LOGURU_SRCS:$(LIB_DIR)/loguru/%.cpp=$(BUILD_DIR)/lib-loguru-%.o)
 
-OBJS = $(MAIN_OBJS) $(MAGS_OBJS) $(MAV_OBJS) $(UTILS_OBJS) $(CON_OBJS) $(LIB_LOGURU_OBJS)
+OBJS = $(MAIN_OBJS) $(MAGS_OBJS) $(MAV_OBJS) $(UTILS_OBJS) $(CON_OBJS) $(LIB_LOGURU_OBJS) $(COMMON_OBJS)
+
+$(BUILD_DIR)/common-%.o: $(COMMON_DIR)/%.cpp $(COMMON_DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(BUILD_DIR)/lib-loguru-%.o: $(LIB_DIR)/loguru/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)

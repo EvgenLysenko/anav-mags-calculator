@@ -6,6 +6,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "mav/mavlink_provider.h"
+#include "common/position.h"
+#include "common/attitude.h"
 
 struct Counter {
     unsigned int count = 0;
@@ -34,7 +37,7 @@ public:
 class MagsLogger: public TaskBase, public INmeaSentenceReceiver
 {
 public:
-    MagsLogger(INmeaSentenceSender* nmeaSentenceSender);
+    MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider* mavlinkProvider);
 
     virtual const char* getTaskName() const { return "MagsLogger"; }
     //virtual void run();
@@ -90,7 +93,23 @@ public:
 
 public:
     enum MagsCommandId {
+        MAGS_SENSOR1_STATUS = 2001,
+        MAGS_SENSOR2_STATUS = 2002,
+        MAGS_SENSOR3_STATUS = 2003,
+        MAGS_SENSOR4_STATUS = 2004,
+        MAGS_SENSORS_STATUS = 2011,
+        MAGS_STATUS = 2012,
         MAGS_CCR_SET = 2013,
+        MAGS_SETTINGS = 2014,
+        MAGS_SETTINGS_REQUEST = 2015,
+        MAGS_LOGGING_START = 2016,
+        MAGS_LOGGING_STOP = 2017,
+        MAGS_SET_OUT_MAGS = 2018,
+        MAGS_SET_OUT_ACCEL = 2019,
+        MAGS_MAGS_VALUES = 2020,
+        MAGS_ACCEL_VALUES = 2021,
+        MAGS_FULL_TRACE_ENABLE = 2022,
+        MAGS_DEBUG_ENABLE = 2023,
     };
 
     struct Mag {
@@ -190,6 +209,31 @@ protected:
     void onLoggingStop();
     void onSwitchToMags();
     void onSwitchToAccel();
+
+protected:
+    MavlinkProvider* const mavlinkProvider;
+    virtual void onMessageReceived(const mavlink_message_t& message);
+
+    void on_msg_system_time_receved(const mavlink_message_t* message);
+    void on_msg_gps_raw_received(const mavlink_message_t* message);
+    void on_msg_attitude_received(const mavlink_message_t* message);
+    void on_command_long_received(const mavlink_message_t* message);
+
+    void sendCommand(MagsCommandId magsCommandId, float param1, float param2 = 0, float param3 = 0, float param4 = 0, float param5 = 0, float param6 = 0);
+    void sendStatus();
+    void sendSensorStatus();
+    void sendMagsValues();
+    void sendAccelValues();
+    void sendSettings();
+
+    Position position;
+    bool positionReceived;
+
+    long gpsReceivedTime;
+
+    Attitude attitude;
+    long attitudeReceivedTime = 0;
+
 };
 
 #endif

@@ -54,15 +54,16 @@ static int set_boud_rate(struct termios& config, int baud)
 
 static int set_interface_attribs(int fd, int speed, int parity)
 {
+    int res = 0;
     struct termios tty;
-    if (tcgetattr(fd, &tty) != 0) {
+    if ((res = tcgetattr(fd, &tty)) != 0) {
         logError("ComConnection - error %d from tcgetattr", errno);
-        return -1;
+        return res;
     }
 
-    if (set_boud_rate(tty, speed) < 0) {
+    if ((res = set_boud_rate(tty, speed)) < 0) {
         logError("ComConnection - error set baud rate: %d", speed);
-        return -1;
+        return res;
     }
 
     // disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
@@ -88,7 +89,7 @@ static int set_interface_attribs(int fd, int speed, int parity)
     tty.c_cflag &= ~CSTOPB;
     tty.c_cflag &= ~CRTSCTS;
 
-    int res = tcsetattr (fd, TCSANOW, &tty);
+    res = tcsetattr (fd, TCSANOW, &tty);
     if (res != 0) {
         logError("ComConnection - error %d from tcsetattr", errno);
         return res;
@@ -113,9 +114,12 @@ bool ComConnection::connect()
         return false;
     }
 
-    bool result = set_interface_attribs(fd, credentials.port, 0);  // set speed to 115,200 bps, 8n1 (no parity)
-    if (result != 0) {
+    connectionResult = set_interface_attribs(fd, credentials.port, 0);  // set speed to 115,200 bps, 8n1 (no parity)
+    if (connectionResult != 0) {
         logError("ComConnection - failure, could not configure port. Exiting");
+
+        if (fd >= 0)
+            close(fd);
     }
     else {
         logInfo("ComConnection - connected to port %s with baud %d, 8 data bits, no parity, 1 stop bit (8N1)", credentials.address.c_str(), credentials.port);
@@ -123,18 +127,13 @@ bool ComConnection::connect()
 
     //tcflush(fd, TCIFLUSH);
 
-    return result == 0;
+    return isConnected();
 }
 
 void ComConnection::disconnect()
 {
     if (fd >= 0)
         close(fd);
-}
-
-bool ComConnection::isConnected() const
-{
-    return fd >= 0;
 }
 
 int ComConnection::send(const unsigned char* data, int size)
