@@ -40,6 +40,7 @@ MagsLogger::MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider*
     ccrGetRequester.init(nmeaSentenceSender);
     ccrSetRequester.init(nmeaSentenceSender);
     outSetCommandRequester.init(nmeaSentenceSender);
+    mavlinkProvider->addMavlinkReceiver(this);
 }
 
 void MagsLogger::onCcrSet(int ccr, int repeatCount)
@@ -497,7 +498,7 @@ void MagsLogger::CommandRequester::loop()
     const long curTime = TimeUtils::getTime();
 
     if (TimeUtils::isTimeout(curTime, commandSendTime, repeatTimeout)) {
-        logInfo("Mags - command requester: \"%s\"  tries: %d", command.c_str(), sendCountLeft);
+        logInfo("Mags - command requester: \"%s\"  size: %d  tries: %d", command.c_str(), (int)command.size(), sendCountLeft);
 
         if (sender) {
             sender->send((const unsigned char*)command.c_str(), command.size());

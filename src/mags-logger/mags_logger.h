@@ -34,7 +34,7 @@ public:
     bool isFired(long curTime);
 };
 
-class MagsLogger: public TaskBase, public INmeaSentenceReceiver
+class MagsLogger: public TaskBase, public INmeaSentenceReceiver, public IMavlinkReceiver
 {
 public:
     MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider* mavlinkProvider);

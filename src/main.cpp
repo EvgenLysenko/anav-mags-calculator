@@ -41,14 +41,15 @@ static Connection* createConnection(const char* name, const Connection::Credenti
     Connection* connection = ConnectionFactory::create(credentials);
     if (connection) {
         logInfo("main - %s connection: created", name);
+
         bool result = connection->connect();
         logInfo("main - %s connection: connect: %d", name, (int)result);
+        logInfo("main - %s connection: connected: %d", name, (int)connection->isConnected());
     }
     else {
         logError("main - %s connection: creating failed", name);
     }
 
-    logInfo("main - %s connection: connected: %d", name, (int)connection->isConnected());
 
     return connection;
 }
@@ -98,6 +99,7 @@ int main(int argc, char* argv[])
         }
 
         nmeaSentenceReader.process();
+        mavlinkProvider.process();
 
         //magsLogger.run();
 
