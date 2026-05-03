@@ -58,6 +58,19 @@ void MagsLogger::onCcrGet()
     ccrGetRequester.sendCommand("$MAG,GET,CCR\n", 10, CCR_SET_REQUEST_PERIOD, MAGS_CCR_SET);
 }
 
+void MagsLogger::returnStatus()
+{
+    const int logoutTime = (TimeUtils::getTime() - logStartedTime) / 1000;
+    logInfo("Mags - return status: %s %d", (logStarted ? "LOG" : ""), logoutTime);
+
+    char text[64];
+    sprintf(text, "$MAG,STATUS,%d,%s,%s,%d,%d,%d,%d\n", flightMode, isArmed() ? "ARMED" : "DISARMED",
+            (logStarted ? "LOG" : ""), logoutTime,
+            magsReceivedCounter.count, gpsCounter.count, attitudeCounter.count);
+
+    nmeaSentenceSender->send((const unsigned char*)text, strlen(text));
+}
+
 void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
 {
     if (MAGS_FULL_TRACE_ENABLED)
@@ -95,6 +108,8 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
         if (parser.nextInt(magsTime) && magsTime)
             magsDetectedLastTime = curTime;
 
+        const bool magsDataPresent = magsTime != 0;
+
         outMagsDetected = !TimeUtils::isTimeout(curTime, magsDetectedLastTime, 1000);
 
         int mx = 0, my = 0, mz = 0;
@@ -102,27 +117,31 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
         parser.nextInt(my);
         parser.nextInt(mz);
 
-        if (mags.size() > 0) {
-            mags[0].time = curTime;
-            mags[0].x = mx;
-            mags[0].y = my;
-            mags[0].z = mz;
-            mags[0].online = mx || my || mz;
+        if (magsDataPresent) {
+            if (mags.size() > 0) {
+                mags[0].time = curTime;
+                mags[0].x = mx;
+                mags[0].y = my;
+                mags[0].z = mz;
+                mags[0].online = mx || my || mz;
+            }
         }
 
         parser.nextInt(mx);
         parser.nextInt(my);
         parser.nextInt(mz);
 
-        if (mags.size() > 1) {
-            mags[0].time = curTime;
-            mags[1].x = mx;
-            mags[1].y = my;
-            mags[1].z = mz;
-            mags[1].online = mx || my || mz;
+        if (magsDataPresent) {
+            if (mags.size() > 1) {
+                mags[0].time = curTime;
+                mags[1].x = mx;
+                mags[1].y = my;
+                mags[1].z = mz;
+                mags[1].online = mx || my || mz;
+            }
         }
 
-        if (magsDataListener)
+        if (magsDataListener && magsDataPresent)
             magsDataListener->onMagsDataReceived(magsTime, mags[0], mags[1]);
 
         // accel detection
@@ -130,6 +149,7 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
         if (parser.nextInt(accelTime) && accelTime)
             accelDetectedLastTime = curTime;
 
+        const bool accelPresent = accelTime != 0;
         outAccelDetected = !TimeUtils::isTimeout(curTime, accelDetectedLastTime, 1000);
 
         if (DEBUG_OUT_ENABLED) {
@@ -147,8 +167,8 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
         }
 
         if (outAccelDetected) {
-            static TimerTrigger trigger(1000);
-            if (trigger.isFired(curTime)) {
+            //static TimerTrigger trigger(1000);
+            //if (trigger.isFired(curTime)) {
                 parser.nextInt(accel.x);
                 parser.nextInt(accel.y);
                 parser.nextInt(accel.z);
@@ -158,7 +178,7 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
                 parser.nextInt(accelMag.x);
                 parser.nextInt(accelMag.y);
                 parser.nextInt(accelMag.z);
-            }
+            //}
         }
 
         if (!outMagsDetected && !outAccelDetected) {
@@ -386,6 +406,7 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
     static long sendStatusTime = curTime;
     if (TimeUtils::isTimeout(curTime, sendStatusTime, STATUS_SEND_PERIOD)) {
         sendStatus();
+        returnStatus();
         sendStatusTime = curTime;
     }
 
@@ -481,6 +502,27 @@ void MagsLogger::magsLogValues()
         logFile.write((const char*)magsReceivedSentence, magsReceivedSize);
 
         magsReceived = false;
+
+        if (positionReceived) {
+            logFile << "," << gpsReceivedTime;
+            logFile << std::fixed << std::setprecision(6);
+            logFile << "," << position.lat;
+            logFile << "," << position.lon;
+            logFile << "," << (int)position.alt;
+            positionReceived = false;
+        }
+        else if (attitudeReceivedTime) {
+            logFile << ",,,,";
+        }
+
+        if (attitudeReceivedTime) {
+            logFile << "," << attitudeReceivedTime;
+            logFile << std::fixed << std::setprecision(2);
+            logFile << "," << attitude.roll;
+            logFile << "," << attitude.pitch;
+            logFile << "," << attitude.yaw;
+            attitudeReceivedTime = 0;
+        }
 
         logFile << std::endl;
     }

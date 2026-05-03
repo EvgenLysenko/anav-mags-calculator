@@ -23,19 +23,32 @@ static const int STATUS_BIT_DEBUG_ENABLED = 0x40;
 void MagsLogger::onMessageReceived(const mavlink_message_t& message)
 {
     switch (message.msgid) {
-        case MAVLINK_MSG_ID_SYSTEM_TIME:
-            on_msg_system_time_receved(&message);
-            break;
-        case MAVLINK_MSG_ID_GPS_RAW_INT:
-            on_msg_gps_raw_received(&message);
-            break;
-        case MAVLINK_MSG_ID_ATTITUDE:
-            on_msg_attitude_received(&message);
-            break;
-        case MAVLINK_MSG_ID_COMMAND_LONG:
-            on_command_long_received(&message);
-            break;
+    case MAVLINK_MSG_ID_HEARTBEAT: {
+        const uint8_t type = mavlink_msg_heartbeat_get_type(&message);
+        this->plane_base_mode = mavlink_msg_heartbeat_get_base_mode(&message);
+        const uint8_t autopilot = mavlink_msg_heartbeat_get_autopilot(&message);
+        if (type == MAV_TYPE::MAV_TYPE_FIXED_WING && autopilot != MAV_AUTOPILOT::MAV_AUTOPILOT_INVALID) {
+            const FlightMode flightMode = (FlightMode)mavlink_msg_heartbeat_get_custom_mode(&message);
+            if (flightMode != this->flightMode) {
+                this->flightMode = flightMode;
+                logInfo("Plane - FlightMode: %d", (int)flightMode);
+            }
+        }
+        break;
     }
+    case MAVLINK_MSG_ID_SYSTEM_TIME:
+        on_msg_system_time_receved(&message);
+        break;
+    case MAVLINK_MSG_ID_GPS_RAW_INT:
+        on_msg_gps_raw_received(&message);
+        break;
+    case MAVLINK_MSG_ID_ATTITUDE:
+        on_msg_attitude_received(&message);
+        break;
+    case MAVLINK_MSG_ID_COMMAND_LONG:
+        on_command_long_received(&message);
+        break;
+}
 }
 
 void MagsLogger::on_msg_system_time_receved(const mavlink_message_t* message)

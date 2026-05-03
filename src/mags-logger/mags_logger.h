@@ -209,6 +209,7 @@ protected:
     void onLoggingStop();
     void onSwitchToMags();
     void onSwitchToAccel();
+    void returnStatus();
 
 protected:
     MavlinkProvider* const mavlinkProvider;
@@ -226,14 +227,17 @@ protected:
     void sendAccelValues();
     void sendSettings();
 
-    Position position;
-    bool positionReceived;
+    FlightMode flightMode = FlightMode::Manual;
+    uint8_t plane_base_mode = 0;
+    bool isArmed() const { return plane_base_mode & MAV_MODE_FLAG::MAV_MODE_FLAG_SAFETY_ARMED; }
 
-    long gpsReceivedTime;
+    Position position;
+    bool positionReceived = false;
+
+    long gpsReceivedTime = 0;
 
     Attitude attitude;
     long attitudeReceivedTime = 0;
-
 };
 
 #endif
