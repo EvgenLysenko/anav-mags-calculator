@@ -44,6 +44,9 @@ public:
 
     virtual void onNmeaSentenceReceived(const unsigned char* buffer, int length);
 
+    uint32_t ip = 0;
+    bool ipRequested = true;
+
     static bool MAGS_FULL_TRACE_ENABLED;
     static bool DEBUG_OUT_ENABLED;
 
@@ -110,6 +113,7 @@ public:
         MAGS_ACCEL_VALUES = 2021,
         MAGS_FULL_TRACE_ENABLE = 2022,
         MAGS_DEBUG_ENABLE = 2023,
+        MAGS_IP = 2024,
     };
 
     struct Mag {
@@ -226,6 +230,7 @@ protected:
     void sendMagsValues();
     void sendAccelValues();
     void sendSettings();
+    void sendIp();
 
     FlightMode flightMode = FlightMode::Manual;
     uint8_t plane_base_mode = 0;

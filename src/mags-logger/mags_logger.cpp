@@ -432,6 +432,11 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
 
         sendMagsValuesTime = curTime;
     }
+
+    if (ipRequested && mavlinkProvider->isGscReady()) {
+        sendIp();
+        ipRequested = false;
+    }
     // dispatcher
 
     ccrGetRequester.loop();

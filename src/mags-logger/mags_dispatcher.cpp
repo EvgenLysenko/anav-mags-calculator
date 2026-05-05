@@ -148,6 +148,11 @@ void MagsLogger::on_command_long_received(const mavlink_message_t* message)
             LOG_F(INFO, "Mags - on_command_long received: MAGS_DEBUG_ENABLE: %d", MagsLogger::DEBUG_OUT_ENABLED ? 1 : 0);
             break;
         }
+        case MAGS_IP: {
+            ipRequested = true;
+            LOG_F(INFO, "Mags - on_command_long received: MAGS_IP");
+            break;
+        }
         default:
             LOG_F(INFO, "Mags - on_command_long received: %d", command);
             break;
@@ -227,6 +232,12 @@ void MagsLogger::sendSettings()
 {
     logInfo("Mags - SETTINGS: count: %d  CCR: %d", (int)mags.size(), ccrReceived);
     sendCommand(MAGS_SETTINGS, mags.size(), ccrReceived);
+}
+
+void MagsLogger::sendIp()
+{
+    logInfo("Mags - send IP: ip: %d.%d.%d.%d", (int)(ip & 0xFF), (int)((ip >> 8) & 0xFF), (int)((ip >> 16) & 0xFF), (int)((ip >> 24) & 0xFF));
+    sendCommand(MAGS_IP, ip);
 }
 
 void MagsLogger::onLoggingStop()

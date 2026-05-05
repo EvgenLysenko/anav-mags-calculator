@@ -11,11 +11,13 @@ LIB_DIR = lib
 
 SRCS = main.cpp\
     config.cpp\
-	task_base.cpp
+    task_base.cpp\
+    ip.cpp
 
 MAIN_DEPS = \
     $(SRC_DIR)/config.h\
-    $(SRC_DIR)/task_base.h
+    $(SRC_DIR)/task_base.h\
+    $(SRC_DIR)/ip.h
 
 MAIN_OBJS := $(SRCS:%.cpp=$(BUILD_DIR)/src-%.o)
 
@@ -35,12 +37,14 @@ UTILS_DIR = $(SRC_DIR)/utils
 UTILS_SRCS = \
     time_utils.cpp\
     parse_utils.cpp\
-    CsvParser.cpp
+    CsvParser.cpp\
+    StringUtils.cpp
 UTILS_DEPS = \
     $(UTILS_DIR)/time_utils.h\
     $(UTILS_DIR)/math_utils.h\
     $(UTILS_DIR)/parse_utils.h\
-    $(UTILS_DIR)/CsvParser.h
+    $(UTILS_DIR)/CsvParser.h\
+    $(UTILS_DIR)/StringUtils.h
 UTILS_OBJS := $(UTILS_SRCS:%.cpp=$(BUILD_DIR)/utils-%.o)
 
 COMMON_DIR = $(SRC_DIR)/common

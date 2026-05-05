@@ -8,6 +8,7 @@
 #include "mags-logger/mags_logger.h"
 #include "mags-logger/nmea_sentence_reader.h"
 #include "mags-logger/mags_calculator.h"
+#include "ip.h"
 
 void segHandler(int sig)
 {
@@ -91,6 +92,10 @@ int main(int argc, char* argv[])
     MagsCalculator magsCalculator;
     magsLogger.setMagsDataListener(&magsCalculator);
     magsCalculator.start();
+
+    const uint32_t ip = getIp();
+    logInfo("ip: %d.%d.%d.%d", (int)(ip & 0xFF), (int)((ip >> 8) & 0xFF), (int)((ip >> 16) & 0xFF), (int)((ip >> 24) & 0xFF));
+    magsLogger.ip = ip;
 
     while (true) {
         if (!magsConnection || !magsConnection->isConnected()) {
