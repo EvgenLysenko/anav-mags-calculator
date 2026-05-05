@@ -37,7 +37,9 @@ uint32_t getIp()
  
             logInfo("Interface: %s Address: %s", ifa->ifa_name, host);
             logInfo("size: %d", (int)sizeof(ifa->ifa_addr->sa_data));
-            if (StringUtils::contains((const unsigned char*)host, NI_MAXHOST, (const unsigned char*)"eth0", 4) == 0) {
+            if (StringUtils::contains((const unsigned char*)ifa->ifa_name, 4, (const unsigned char*)"eth0", 4) != 0 ||
+                StringUtils::contains((const unsigned char*)ifa->ifa_name, 5, (const unsigned char*)"wlan0", 5) != 0
+            ) {
                 if (sizeof(ifa->ifa_addr->sa_data) >= 6) {
                     const unsigned char* a = (unsigned char*)(ifa->ifa_addr->sa_data);
                     logInfo("ip detected: %d.%d.%d.%d", (int)a[2], (int)a[3], (int)(a[4]), (int)a[5]);

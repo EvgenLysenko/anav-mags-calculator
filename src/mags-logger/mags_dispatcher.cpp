@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "utils/time_utils.h"
 #include "mav/mav_utils.h"
+#include "ip.h"
 
 const static MAV_CMD MAGS_COMMAND_LONG_ID = MAV_CMD::MAV_CMD_USER_2;
 
@@ -236,6 +237,8 @@ void MagsLogger::sendSettings()
 
 void MagsLogger::sendIp()
 {
+    ip = getIp();
+
     logInfo("Mags - send IP: ip: %d.%d.%d.%d", (int)(ip & 0xFF), (int)((ip >> 8) & 0xFF), (int)((ip >> 16) & 0xFF), (int)((ip >> 24) & 0xFF));
     sendCommand(MAGS_IP, ip);
 }
