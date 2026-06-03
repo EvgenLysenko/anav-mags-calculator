@@ -154,6 +154,16 @@ void MagsLogger::on_command_long_received(const mavlink_message_t* message)
             LOG_F(INFO, "Mags - on_command_long received: MAGS_IP");
             break;
         }
+        case MAGS_GPS_ON: {
+            LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_ON");
+            doGpsOn();
+            break;
+        }
+        case MAGS_GPS_OFF: {
+            LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_OFF");
+            doGpsOff();
+            break;
+        }
         default:
             LOG_F(INFO, "Mags - on_command_long received: %d", command);
             break;
@@ -264,4 +274,27 @@ void MagsLogger::onSwitchToAccel()
     LOG_F(INFO, "Mags - set out: ACCEL");
 
     outSetCommandRequester.sendCommand("$MAG,OUT,MAGS,DISABLE\n$MAG,OUT,ACCEL,ENABLE\n", 5, 1000, MAGS_SET_OUT_ACCEL);
+}
+void MagsLogger::doGpsOn()
+{
+    if (!mavlinkProvider->isPlaneReady()) {
+        LOG_F(WARNING, "Mags - do GPS ON: plane not ready");
+        return;
+    }
+
+    LOG_F(INFO, "Mags - do GPS ON: EKF source set %d", ekfSrcGps);
+    mavlinkProvider->sendSetEkfSourceSet(ekfSrcGps);
+    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - GPS enabled (EKF SRC)");
+}
+
+void MagsLogger::doGpsOff()
+{
+    if (!mavlinkProvider->isPlaneReady()) {
+        LOG_F(WARNING, "Mags - do GPS OFF: plane not ready");
+        return;
+    }
+
+    LOG_F(INFO, "Mags - do GPS OFF: EKF source set %d", ekfSrcNoGps);
+    mavlinkProvider->sendSetEkfSourceSet(ekfSrcNoGps);
+    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - GPS disabled (EKF SRC)");
 }

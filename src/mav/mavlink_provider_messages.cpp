@@ -160,6 +160,20 @@ void MavlinkProvider::sendDisarm(bool forsed)
     sendCommandLong(MAV_CMD::MAV_CMD_COMPONENT_ARM_DISARM, 0, 0);
 }
 
+// ArduPilot-specific; defined in ardupilotmega.xml (not in common dialect).
+static const MAV_CMD MAV_CMD_SET_EKF_SOURCE_SET = static_cast<MAV_CMD>(42007);
+
+void MavlinkProvider::sendSetEkfSourceSet(int sourceSet)
+{
+    if (!isPlaneReady()) {
+        logWarning("send EKF_SOURCE_SET: plane not ready");
+        return;
+    }
+
+    logInfo("send EKF_SOURCE_SET: from %d/%d  set: %d", compSystemId, compComponentId, sourceSet);
+    sendCommandLong(MAV_CMD_SET_EKF_SOURCE_SET, (float)sourceSet, 0, 0, 0, 0, 0, 0);
+}
+
 void MavlinkProvider::sendRequestParam(const char* paramId)
 {
     mavlink_message_t message;

@@ -99,6 +99,8 @@ public:
     void sendDisarm(bool forced = false);
     void sendRequestParam(const char* paramId);
 
+    void sendSetEkfSourceSet(int sourceSet);
+
     void sendGuidedPosition(double lat, double lon, float alt);
     void sendGuidedPosition(double lat, double lon, float alt, MAV_FRAME mav_frame);
 

@@ -310,6 +310,10 @@ void MagsLogger::initParams()
 
     logInfo("Mags - inverted: x: %d  y: %d  z: %d", x_inverted, y_inverted, z_inverted);
     logInfo("Mags - xy_switched: %d", xy_switched);
+
+    ekfSrcGps = Config::readInt("mags/ekf_src_gps", 1);
+    ekfSrcNoGps = Config::readInt("mags/ekf_src_no_gps", 2);
+    logInfo("Mags - EKF source sets: gps: %d  no_gps: %d", ekfSrcGps, ekfSrcNoGps);
 }
 
 void MagsLogger::logInit()

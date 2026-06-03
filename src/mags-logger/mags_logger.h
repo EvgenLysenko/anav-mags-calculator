@@ -114,6 +114,8 @@ public:
         MAGS_FULL_TRACE_ENABLE = 2022,
         MAGS_DEBUG_ENABLE = 2023,
         MAGS_IP = 2024,
+        MAGS_GPS_ON = 2025,
+        MAGS_GPS_OFF = 2026,
     };
 
     struct Mag {
@@ -137,6 +139,9 @@ public:
     }
 
     bool wait_gps = true;
+
+    int ekfSrcGps = 1;
+    int ekfSrcNoGps = 2;
 
     class IMagsDataListener {
     public:
@@ -243,6 +248,9 @@ protected:
 
     Attitude attitude;
     long attitudeReceivedTime = 0;
+
+    void doGpsOn();
+    void doGpsOff();
 };
 
 #endif
