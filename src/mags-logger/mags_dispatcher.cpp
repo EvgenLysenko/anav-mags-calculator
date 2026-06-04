@@ -250,7 +250,7 @@ void MagsLogger::sendIp()
     ip = getIp();
 
     logInfo("Mags - send IP: ip: %d.%d.%d.%d", (int)(ip & 0xFF), (int)((ip >> 8) & 0xFF), (int)((ip >> 16) & 0xFF), (int)((ip >> 24) & 0xFF));
-    sendCommand(MAGS_IP, ip);
+    sendCommand(MAGS_IP, ip, (int)(ip & 0xFF), (int)((ip >> 8) & 0xFF), (int)((ip >> 16) & 0xFF), (int)((ip >> 24) & 0xFF));
 }
 
 void MagsLogger::onLoggingStop()
