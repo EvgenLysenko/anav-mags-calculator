@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
 
     logsInit(argc, argv);
 
+    logInfo("Mags - v2.3");
+
     // mavlink
     Connection::Credentials credentials;
     credentials.type = Config::readString("mavlink/connection/type", Connection::Credentials::COM);
