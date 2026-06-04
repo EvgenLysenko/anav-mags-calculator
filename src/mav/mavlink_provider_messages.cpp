@@ -170,8 +170,8 @@ void MavlinkProvider::sendSetEkfSourceSet(int sourceSet)
         return;
     }
 
-    logInfo("send EKF_SOURCE_SET: from %d/%d  set: %d", compSystemId, compComponentId, sourceSet);
-    sendCommandLong(MAV_CMD_SET_EKF_SOURCE_SET, (float)sourceSet, 0, 0, 0, 0, 0, 0);
+    logInfo("send EKF_SOURCE_SET: to %d/%d  from %d/%d  set: %d", plane_system_id, plane_component_id, compSystemId, compComponentId, sourceSet);
+    sendCommandLong(plane_system_id, plane_component_id, MAV_CMD_SET_EKF_SOURCE_SET, 0, (float)sourceSet, 0, 0, 0, 0, 0, 0);
 }
 
 void MavlinkProvider::sendRequestParam(const char* paramId)
@@ -317,7 +317,7 @@ void MavlinkProvider::sendAttitude(float roll, float pitch, float yaw, float thr
     send(message);
 }
 
-void MavlinkProvider::sendStatustext(MAV_SEVERITY severity, const std::string& text)
+void MavlinkProvider::sendStatusText(MAV_SEVERITY severity, const std::string& text)
 {
     mavlink_message_t message;
     char _text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN + 1];

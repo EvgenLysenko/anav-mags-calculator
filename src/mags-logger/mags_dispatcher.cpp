@@ -189,7 +189,7 @@ void MagsLogger::sendStatus()
         (MagsLogger::DEBUG_OUT_ENABLED ? STATUS_BIT_DEBUG_ENABLED : 0)
     ;
 
-    const int logoutTime = (TimeUtils::getTime() - logStartedTime) / 1000;
+    const int logoutTime = logStarted ? (TimeUtils::getTime() - logStartedTime) / 1000 : 0;
 
     sendCommand(MAGS_STATUS, magsLogoutCounter.count, logoutTime, magsReceivedCounter.count, (gpsFixed ? (float)gpsCounter.count : (float)-1), attitudeCounter.count, status);
     logInfo("Mags - STATUS: mags: %d  log fps: %d  gps fix: %d  gps: %d  att: %d  out mags: %d  accel: %d", magsReceivedCounter.count, magsLogoutCounter.count, gpsFixed, gpsCounter.count, attitudeCounter.count,
@@ -256,7 +256,7 @@ void MagsLogger::sendIp()
 void MagsLogger::onLoggingStop()
 {
     logStarted = false;
-    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - log stopped");
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - log stopped");
 
     sendSensorStatus();
     sendSettings();
@@ -284,7 +284,7 @@ void MagsLogger::doGpsOn()
 
     LOG_F(INFO, "Mags - do GPS ON: EKF source set %d", ekfSrcGps);
     mavlinkProvider->sendSetEkfSourceSet(ekfSrcGps);
-    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - GPS enabled (EKF SRC)");
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - GPS enabled (EKF SRC)");
 }
 
 void MagsLogger::doGpsOff()
@@ -296,5 +296,5 @@ void MagsLogger::doGpsOff()
 
     LOG_F(INFO, "Mags - do GPS OFF: EKF source set %d", ekfSrcNoGps);
     mavlinkProvider->sendSetEkfSourceSet(ekfSrcNoGps);
-    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - GPS disabled (EKF SRC)");
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - GPS disabled (EKF SRC)");
 }

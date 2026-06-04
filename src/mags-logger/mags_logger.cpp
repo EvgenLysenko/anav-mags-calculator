@@ -60,7 +60,7 @@ void MagsLogger::onCcrGet()
 
 void MagsLogger::returnStatus()
 {
-    const int logoutTime = (TimeUtils::getTime() - logStartedTime) / 1000;
+    const int logoutTime = logStarted ? (TimeUtils::getTime() - logStartedTime) / 1000 : 0;
     logInfo("Mags - return status: %s %d", (logStarted ? "LOG" : ""), logoutTime);
 
     char text[64];
@@ -380,7 +380,7 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
         consoleOutTime = curTime - (CONSOLE_OUT_PERIOD - 10000);
     }
 
-    if (!logStarted) {
+    if (!logStarted && isArmed()) {
         startLogging();
     }
 
@@ -392,7 +392,7 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
             if (!magsStartedMessageSent) {
                 magsStartedMessageSent = true;
 
-                mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - started");
+                mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - started");
             }
 
             static bool magsOnlineMessageSent = false;
@@ -400,7 +400,7 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
                 if (magsReceivedCounter.count > 0) {
                     magsOnlineMessageSent = true;
 
-                    mavlinkProvider->sendStatustext(MAV_SEVERITY_INFO, "Mags - online");
+                    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - online");
 
                     sendStatus();
                 }

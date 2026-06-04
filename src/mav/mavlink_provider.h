@@ -106,7 +106,7 @@ public:
 
     void sendAttitude(float roll, float pitch, float yaw, float throttle);
 
-    void sendStatustext(MAV_SEVERITY severity, const std::string& text);
+    void sendStatusText(MAV_SEVERITY severity, const std::string& text);
 };
 
 #endif
