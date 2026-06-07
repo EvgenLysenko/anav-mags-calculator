@@ -3,6 +3,9 @@
 
 class TimeTrigger
 {
+public:
+    static const int INFINITE = -1;
+
 protected:
     long period = 0;
     int count = 0;
@@ -10,11 +13,12 @@ protected:
 
 public:
     TimeTrigger() : period(0), count(0), time(0) {}
-    TimeTrigger(long period, int count = -1, bool startImmediately = false); // -1 means infinite
-    void start(long period, int count = -1, bool startImmediately = false);
+    TimeTrigger(long period, int count = INFINITE, bool startImmediately = false);
+    void start(long period, int count = INFINITE, bool startImmediately = false);
     bool isFired();
     bool isFired(long curTime);
-    bool isFinished() const { return count <= 0; }
+    bool isFinished() const { return count == 0; }
+    void stop() { count = 0; }
 };
 
 #endif

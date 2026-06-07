@@ -1,6 +1,8 @@
 #include "gps_on_off_switcher.h"
 #include "logging.h"
 #include "config.h"
+#include <cstdio>
+#include <cstring>
 
 const char* AHRS_GPS_USE_PARAM_NAME = "AHRS_GPS_USE";
 const int GPS_ON_OFF_REPEAT_COUNT = 5;
@@ -30,6 +32,51 @@ void GPSOnOffSwitcher::onMessageReceived(const mavlink_message_t& message)
 {
     gpsOnOff_AHRS_GPS_USE_Setter.onMessageReceived(message);
     //gpsOnOff_EK3_SOURCE_SET_Requester.onMessageReceived(message);
+
+    if (message.msgid == MAVLINK_MSG_ID_STATUSTEXT) {
+        onStatusTextReceived(message);
+    }
+}
+
+void GPSOnOffSwitcher::onStatusTextReceived(const mavlink_message_t& message)
+{
+    mavlink_statustext_t statustext;
+    mavlink_msg_statustext_decode(&message, &statustext);
+
+    // The text field is not guaranteed to be null-terminated.
+    char text[sizeof(statustext.text) + 1] = {0};
+    memcpy(text, statustext.text, sizeof(statustext.text));
+
+    // ArduPilot emits "Using EKF Source Set N" (1-based) when the active EKF3
+    // source set changes, e.g. via the EKF Source Set aux function we trigger.
+    int sourceSet = 0;
+    if (sscanf(text, "Using EKF Source Set %d", &sourceSet) != 1)
+        return;
+
+    onEkfSourceSetDetected(sourceSet);
+}
+
+void GPSOnOffSwitcher::onEkfSourceSetDetected(int sourceSet)
+{
+    currentEkfSourceSet = sourceSet;
+
+    if (sourceSet == EK3_SRC_GPS) {
+        logInfo("GPS Swither - detected EKF source set %d (GPS)", sourceSet);
+        if (gpsRequestedType == GPS_REQUEST_TYPE_ON) {
+            logInfo("GPS Swither - GPS ON request finished");
+            gpsOnOff_EK3_SOURCE_SET_Trigger.stop();
+        }
+    }
+    else if (sourceSet == EK3_SRC_NO_GPS) {
+        logInfo("GPS Swither - detected EKF source set %d (NO GPS)", sourceSet);
+        if (gpsRequestedType == GPS_REQUEST_TYPE_OFF) {
+            logInfo("GPS Swither - GPS OFF request finished");
+            gpsOnOff_EK3_SOURCE_SET_Trigger.stop();
+        }
+    }
+    else {
+        logInfo("GPS Swither - detected EKF source set %d", sourceSet);
+    }
 }
 
 void GPSOnOffSwitcher::loop()
@@ -40,18 +87,18 @@ void GPSOnOffSwitcher::loop()
     gpsOnOff_AHRS_GPS_USE_Setter.loop();
     //gpsOnOff_EK3_SOURCE_SET_Trigger.loop();
 
-    if (gpsRequestType != GPS_REQUEST_TYPE_NONE) {
+    if (gpsRequestedType != GPS_REQUEST_TYPE_NONE) {
         if (gpsOnOff_EK3_SOURCE_SET_Trigger.isFired()) {
-            if (gpsRequestType == GPS_REQUEST_TYPE_ON) {
+            if (gpsRequestedType == GPS_REQUEST_TYPE_ON) {
                 doGpsOn();
             }
-            else if (gpsRequestType == GPS_REQUEST_TYPE_OFF) {  
+            else if (gpsRequestedType == GPS_REQUEST_TYPE_OFF) {  
                 doGpsOff();
             }
         }
 
         if (gpsOnOff_AHRS_GPS_USE_Setter.isFinished() && gpsOnOff_EK3_SOURCE_SET_Trigger.isFinished()) {// && gpsOnOff_EK3_SOURCE_SET_Requester.isFinished()) {
-            gpsRequestType = GPS_REQUEST_TYPE_NONE;
+            gpsRequestedType = GPS_REQUEST_TYPE_NONE;
 
             // TODO check if the command was successful
         }
@@ -61,8 +108,8 @@ void GPSOnOffSwitcher::loop()
 void GPSOnOffSwitcher::requestGpsOn()
 {
     logInfo("GPS Swither - GPS ON");
-    gpsRequestType = GPS_REQUEST_TYPE_ON;
-    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 1.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestType);
+    gpsRequestedType = GPS_REQUEST_TYPE_ON;
+    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 1.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestedType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
     gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT);
@@ -72,9 +119,9 @@ void GPSOnOffSwitcher::requestGpsOn()
 void GPSOnOffSwitcher::requestGpsOff()
 {
     logInfo("GPS Swither - GPS OFF");
-    gpsRequestType = GPS_REQUEST_TYPE_OFF;
+    gpsRequestedType = GPS_REQUEST_TYPE_OFF;
 
-    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 0.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestType);
+    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 0.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestedType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
     gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT);

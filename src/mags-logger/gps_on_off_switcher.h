@@ -26,24 +26,33 @@ protected:
 
 public:
     virtual void onMessageReceived(const mavlink_message_t& message);
-    bool isFinished() const { return gpsRequestType == GPS_REQUEST_TYPE_NONE; }
+    bool isFinished() const { return gpsRequestedType == GPS_REQUEST_TYPE_NONE; }
+
+    // Active EKF3 source set as last reported by the plane via STATUSTEXT
+    // ("Using EKF Source Set N"). -1 = unknown / not yet detected.
+    int currentEkfSourceSet = -1;
+    int getCurrentEkfSourceSet() const { return currentEkfSourceSet; }
+    bool isEkfSourceGps() const { return currentEkfSourceSet == EK3_SRC_GPS; }
+    bool isEkfSourceNoGps() const { return currentEkfSourceSet == EK3_SRC_NO_GPS; }
 
 public:
     enum GpsRequestType {
         GPS_REQUEST_TYPE_NONE = 0,
         GPS_REQUEST_TYPE_ON,
         GPS_REQUEST_TYPE_OFF,
-        // GPS_REQUEST_TYPE_ON_AUX,
-        // GPS_REQUEST_TYPE_OFF_AUX,
     };
 
-    GpsRequestType gpsRequestType = GPS_REQUEST_TYPE_NONE;
+    GpsRequestType gpsRequestedType = GPS_REQUEST_TYPE_NONE;
     ParamSetter gpsOnOff_AHRS_GPS_USE_Setter;
     TimeTrigger gpsOnOff_EK3_SOURCE_SET_Trigger;
     void requestGpsOn();
     void requestGpsOff();
     void doGpsOn();
     void doGpsOff();
+
+protected:
+    void onStatusTextReceived(const mavlink_message_t& message);
+    void onEkfSourceSetDetected(int sourceSet);
 };
 
 #endif
