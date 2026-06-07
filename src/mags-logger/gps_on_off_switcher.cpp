@@ -5,7 +5,7 @@
 #include <cstring>
 
 const char* AHRS_GPS_USE_PARAM_NAME = "AHRS_GPS_USE";
-const int GPS_ON_OFF_REPEAT_COUNT = 5;
+const int GPS_ON_OFF_REPEAT_COUNT = 7;
 const int GPS_ON_OFF_REPEAT_TIMEOUT = 1000;
 
 GPSOnOffSwitcher::GPSOnOffSwitcher(MavlinkProvider* mavlinkProvider):
@@ -49,6 +49,8 @@ void GPSOnOffSwitcher::onStatusTextReceived(const mavlink_message_t& message)
 
     // ArduPilot emits "Using EKF Source Set N" (1-based) when the active EKF3
     // source set changes, e.g. via the EKF Source Set aux function we trigger.
+    logInfo("GPS Swither - status text received: %s", text);
+
     int sourceSet = 0;
     if (sscanf(text, "Using EKF Source Set %d", &sourceSet) != 1)
         return;
@@ -98,9 +100,32 @@ void GPSOnOffSwitcher::loop()
         }
 
         if (gpsOnOff_AHRS_GPS_USE_Setter.isFinished() && gpsOnOff_EK3_SOURCE_SET_Trigger.isFinished()) {// && gpsOnOff_EK3_SOURCE_SET_Requester.isFinished()) {
-            gpsRequestedType = GPS_REQUEST_TYPE_NONE;
+            if (gpsRequestedType == GPS_REQUEST_TYPE_ON) {
+                if (isEkfSourceGps()) {
+                    gpsRequestResult = GPS_REQUEST_RESULT_ON_SUCCESS;
+                    logInfo("GPS Swither - GPS ON request finished successfully");
+                }
+                else {
+                    gpsRequestResult = GPS_REQUEST_RESULT_ON_FAILED;
+                    logInfo("GPS Swither - GPS ON request failed");
+                }
+            }
+            else if (gpsRequestedType == GPS_REQUEST_TYPE_OFF) {
+                if (isEkfSourceNoGps()) {
+                    gpsRequestResult = GPS_REQUEST_RESULT_OFF_SUCCESS;
+                    logInfo("GPS Swither - GPS OFF request finished successfully");
+                }
+                else {
+                    gpsRequestResult = GPS_REQUEST_RESULT_OFF_FAILED;
+                    logInfo("GPS Swither - GPS OFF request failed");
+                }
+            }
+            else {
+                gpsRequestResult = static_cast<GpsRequestResult>(GPS_REQUEST_RESULT_UNDEFINED | GPS_REQUEST_RESULT_FAILED);
+                logInfo("GPS Swither - GPS %d request failed", (int)gpsRequestedType);
+            }
 
-            // TODO check if the command was successful
+            gpsRequestedType = GPS_REQUEST_TYPE_NONE;
         }
     }
 }
@@ -109,6 +134,8 @@ void GPSOnOffSwitcher::requestGpsOn()
 {
     logInfo("GPS Swither - GPS ON");
     gpsRequestedType = GPS_REQUEST_TYPE_ON;
+    gpsRequestResult = GPS_REQUEST_RESULT_ON_IN_PROGRESS;
+
     gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 1.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestedType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
@@ -120,6 +147,7 @@ void GPSOnOffSwitcher::requestGpsOff()
 {
     logInfo("GPS Swither - GPS OFF");
     gpsRequestedType = GPS_REQUEST_TYPE_OFF;
+    gpsRequestResult = GPS_REQUEST_RESULT_OFF_IN_PROGRESS;
 
     gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 0.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestedType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();

@@ -175,6 +175,7 @@ protected:
     void on_command_long_received(const mavlink_message_t* message);
 
     void sendCommand(MagsCommandId magsCommandId, float param1, float param2 = 0, float param3 = 0, float param4 = 0, float param5 = 0, float param6 = 0);
+    void sendCommandInt(MagsCommandId magsCommandId, float param1, float param2 = 0, float param3 = 0, int32_t x = 0, int32_t y = 0, float z = 0, uint8_t frame = MAV_FRAME::MAV_FRAME_GLOBAL);
     void sendStatus();
     void sendSensorStatus();
     void sendMagsValues();

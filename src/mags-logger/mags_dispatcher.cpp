@@ -20,6 +20,9 @@ static const int STATUS_BIT_OUT_MAGS = 0x8;
 static const int STATUS_BIT_OUT_ACCEL = 0x10;
 static const int STATUS_BIT_FULL_TRACE_ENEBLED = 0x20;
 static const int STATUS_BIT_DEBUG_ENABLED = 0x40;
+static const int STATUS_BIT_UNUSED = 0x80;
+static const int STATUS_BIT_GPS_REQUEST_RESULT_MASK = 0x100 | 0x200 | 0x400 | 0x800; // 0xF00 // OK | ON OFF | failed | in progress
+static const int STATUS_BIT_GPS_REQUEST_RESULT_SHIFT = 8;
 
 void MagsLogger::onMessageReceived(const mavlink_message_t& message)
 {
@@ -177,6 +180,12 @@ void MagsLogger::sendCommand(MagsCommandId magsCommandId, float param1, float pa
         MAGS_COMMAND_LONG_ID, 0, magsCommandId, param1, param2, param3, param4, param5, param6);
 }
 
+void MagsLogger::sendCommandInt(MagsCommandId magsCommandId, float param1, float param2, float param3, int32_t x, int32_t y, float z, uint8_t frame)
+{
+    mavlinkProvider->sendCommandInt(mavlinkProvider->getGscSystemId(), mavlinkProvider->getGscComponentId(),
+        MAGS_COMMAND_LONG_ID, magsCommandId, param1, param2, param3, x, y, z, frame);
+}
+
 void MagsLogger::sendStatus()
 {
     const int status = 0 |
@@ -186,12 +195,13 @@ void MagsLogger::sendStatus()
         (outMagsDetected ? STATUS_BIT_OUT_MAGS : 0) |
         (outAccelDetected ? STATUS_BIT_OUT_ACCEL : 0) |
         (MagsLogger::MAGS_FULL_TRACE_ENABLED ? STATUS_BIT_FULL_TRACE_ENEBLED : 0) |
-        (MagsLogger::DEBUG_OUT_ENABLED ? STATUS_BIT_DEBUG_ENABLED : 0)
+        (MagsLogger::DEBUG_OUT_ENABLED ? STATUS_BIT_DEBUG_ENABLED : 0) |
+        ((gpsOnOffSwitcher.getGpsRequestResult() << STATUS_BIT_GPS_REQUEST_RESULT_SHIFT) & STATUS_BIT_GPS_REQUEST_RESULT_MASK)
     ;
 
     const int logoutTime = logStarted ? (TimeUtils::getTime() - logStartedTime) / 1000 : 0;
 
-    sendCommand(MAGS_STATUS, magsLogoutCounter.count, logoutTime, magsReceivedCounter.count, (gpsFixed ? (float)gpsCounter.count : (float)-1), attitudeCounter.count, status);
+    sendCommandInt(MAGS_STATUS, magsLogoutCounter.count, logoutTime, magsReceivedCounter.count, status, (gpsFixed ? (float)gpsCounter.count : (float)-1), attitudeCounter.count);
     logInfo("Mags - STATUS: mags: %d  log fps: %d  gps fix: %d  gps: %d  att: %d  out mags: %d  accel: %d", magsReceivedCounter.count, magsLogoutCounter.count, gpsFixed, gpsCounter.count, attitudeCounter.count,
         (outMagsDetected ? 1 : 0), (outAccelDetected ? 1 : 0));
 }

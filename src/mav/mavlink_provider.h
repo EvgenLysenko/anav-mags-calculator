@@ -93,7 +93,7 @@ public:
         sendCommandLong(plane_system_id, plane_component_id, command, 0, param1, param2, 0, 0, 0, 0, 0);
     }
 
-    void sendCommandInt(uint8_t target_system, uint8_t target_component, MAV_CMD command, uint8_t frame, float param1, float param2, float param3, float param4, int32_t x, int32_t y, float z);
+    void sendCommandInt(uint8_t target_system, uint8_t target_component, MAV_CMD command, float param1, float param2, float param3, float param4, int32_t x, int32_t y, float z, uint8_t frame);
 
     void sendRequestMessageInterval(int messageId, int period);
 

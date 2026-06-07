@@ -80,7 +80,7 @@ void MavlinkProvider::sendCommandLong(
 }
 
 void MavlinkProvider::sendCommandInt(uint8_t target_system, uint8_t target_component, MAV_CMD command, 
-    uint8_t frame, float param1, float param2, float param3, float param4, int32_t x, int32_t y, float z)
+    float param1, float param2, float param3, float param4, int32_t x, int32_t y, float z, uint8_t frame)
 {
     mavlink_command_int_t com = {0};
 
