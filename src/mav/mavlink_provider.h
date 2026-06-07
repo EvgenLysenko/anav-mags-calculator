@@ -100,6 +100,7 @@ public:
     void sendRequestParam(const char* paramId);
 
     void sendSetEkfSourceSet(int sourceSet);
+    void sendDoAuxFunction(int auxFunction, int switchPos);
 
     void sendGuidedPosition(double lat, double lon, float alt);
     void sendGuidedPosition(double lat, double lon, float alt, MAV_FRAME mav_frame);

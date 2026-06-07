@@ -174,6 +174,21 @@ void MavlinkProvider::sendSetEkfSourceSet(int sourceSet)
     sendCommandLong(plane_system_id, plane_component_id, MAV_CMD_SET_EKF_SOURCE_SET, 0, (float)sourceSet, 0, 0, 0, 0, 0, 0);
 }
 
+// MAV_CMD_DO_AUX_FUNCTION: trigger an RC auxiliary function over MAVLink.
+// param1: RCx_OPTION number, param2: switch level (0=low, 1=middle, 2=high).
+static const MAV_CMD MAV_CMD_DO_AUX_FUNCTION = static_cast<MAV_CMD>(218);
+
+void MavlinkProvider::sendDoAuxFunction(int auxFunction, int switchPos)
+{
+    if (!isPlaneReady()) {
+        logWarning("send DO_AUX_FUNCTION: plane not ready");
+        return;
+    }
+
+    logInfo("send DO_AUX_FUNCTION: to %d/%d  from %d/%d  func: %d  pos: %d", plane_system_id, plane_component_id, compSystemId, compComponentId, auxFunction, switchPos);
+    sendCommandLong(plane_system_id, plane_component_id, MAV_CMD_DO_AUX_FUNCTION, 0, (float)auxFunction, (float)switchPos, 0, 0, 0, 0, 0);
+}
+
 void MavlinkProvider::sendRequestParam(const char* paramId)
 {
     mavlink_message_t message;

@@ -49,13 +49,13 @@ void MagsLogger::onCcrSet(int ccr, int repeatCount)
 
     char text[32];
     sprintf(text, "$MAG,SET,CCR,%d\n", ccr);
-    ccrSetRequester.sendCommand(text, repeatCount, CCR_SET_REQUEST_PERIOD, MAGS_CCR_SET, ccr);
+    ccrSetRequester.setCommand(text, repeatCount, CCR_SET_REQUEST_PERIOD, MAGS_CCR_SET, ccr);
     onCcrGet();
 }
 
 void MagsLogger::onCcrGet()
 {
-    ccrGetRequester.sendCommand("$MAG,GET,CCR\n", 10, CCR_SET_REQUEST_PERIOD, MAGS_CCR_SET);
+    ccrGetRequester.setCommand("$MAG,GET,CCR\n", 10, CCR_SET_REQUEST_PERIOD, MAGS_CCR_SET);
 }
 
 void MagsLogger::returnStatus()
@@ -448,6 +448,9 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
     outSetCommandRequester.loop();
 
     magsLogValues();
+
+    gpsOnOff_EK3_SOURCE_SET_Requester.loop();
+    gpsOnOff_AHRS_GPS_USE_Requester.loop();
 
     return magsInitialized || logStarted ? RUN_THREAD_TIMEOUT_IN_PROGRESS : default_timeout;
 }

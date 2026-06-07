@@ -71,7 +71,7 @@ public:
         bool commandIsConfirmed = true;
 
     public:
-        void sendCommand(const std::string& command, int repeatCount, long repeatTimeout, int id, int tag = 0) {
+        void setCommand(const std::string& command, int repeatCount, long repeatTimeout, int id, int tag = 0) {
             this->id = id;
             this->tag = tag;
             this->command = command;
@@ -142,6 +142,10 @@ public:
 
     int ekfSrcGps = 1;
     int ekfSrcNoGps = 2;
+
+    // ArduPilot RCx_OPTION used to select the active EKF source set via aux function.
+    // Switch position low/middle/high maps to source set 1/2/3.
+    int ekfSourceAuxFunction = 90;
 
     class IMagsDataListener {
     public:
@@ -220,6 +224,21 @@ protected:
     void onSwitchToAccel();
     void returnStatus();
 
+    enum GpsRequestType {
+        GPS_REQUEST_TYPE_NONE = 0,
+        GPS_REQUEST_TYPE_ON,
+        GPS_REQUEST_TYPE_OFF,
+        // GPS_REQUEST_TYPE_ON_AUX,
+        // GPS_REQUEST_TYPE_OFF_AUX,
+    };
+
+    GpsRequestType gpsRequestType = GPS_REQUEST_TYPE_NONE;
+    CommandRequester gpsOnOff_AHRS_GPS_USE_Requester;
+    CommandRequester gpsOnOff_EK3_SOURCE_SET_Requester;
+    void onGpsOnRequested(GpsRequestType gpsRequestType);
+    void onGpsOn();
+    void onGpsOff();
+
 protected:
     MavlinkProvider* const mavlinkProvider;
     virtual void onMessageReceived(const mavlink_message_t& message);
@@ -251,6 +270,8 @@ protected:
 
     void doGpsOn();
     void doGpsOff();
+    void doGpsOnAux();
+    void doGpsOffAux();
 };
 
 #endif

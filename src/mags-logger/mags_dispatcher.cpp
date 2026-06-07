@@ -156,12 +156,12 @@ void MagsLogger::on_command_long_received(const mavlink_message_t* message)
         }
         case MAGS_GPS_ON: {
             LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_ON");
-            doGpsOn();
+            onGpsOn();
             break;
         }
         case MAGS_GPS_OFF: {
             LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_OFF");
-            doGpsOff();
+            onGpsOff();
             break;
         }
         default:
@@ -266,15 +266,35 @@ void MagsLogger::onSwitchToMags()
 {
     LOG_F(INFO, "Mags - set out: MAGS");
 
-    outSetCommandRequester.sendCommand("$MAG,OUT,ACCEL,DISABLE\n$MAG,OUT,MAGS,ENABLE\n\0", 5, 1000, MAGS_SET_OUT_MAGS);
+    outSetCommandRequester.setCommand("$MAG,OUT,ACCEL,DISABLE\n$MAG,OUT,MAGS,ENABLE\n\0", 5, 1000, MAGS_SET_OUT_MAGS);
 }
 
 void MagsLogger::onSwitchToAccel()
 {
     LOG_F(INFO, "Mags - set out: ACCEL");
 
-    outSetCommandRequester.sendCommand("$MAG,OUT,MAGS,DISABLE\n$MAG,OUT,ACCEL,ENABLE\n", 5, 1000, MAGS_SET_OUT_ACCEL);
+    outSetCommandRequester.setCommand("$MAG,OUT,MAGS,DISABLE\n$MAG,OUT,ACCEL,ENABLE\n", 5, 1000, MAGS_SET_OUT_ACCEL);
 }
+
+void MagsLogger::onGpsOn()
+{
+    LOG_F(INFO, "Mags - GPS ON");
+    onGpsOnRequested(GPS_REQUEST_TYPE_ON);
+}
+
+void MagsLogger::onGpsOff()
+{
+    LOG_F(INFO, "Mags - GPS OFF");
+    onGpsOnRequested(GPS_REQUEST_TYPE_OFF);
+}
+
+void MagsLogger::onGpsOnRequested(GpsRequestType gpsRequestType)
+{
+    this->gpsRequestType = gpsRequestType;
+    gpsOnOff_EK3_SOURCE_SET_Requester.setCommand("", 5, 1000, gpsRequestType);
+    gpsOnOff_AHRS_GPS_USE_Requester.setCommand("", 5, 1000, gpsRequestType);
+}
+
 void MagsLogger::doGpsOn()
 {
     if (!mavlinkProvider->isPlaneReady()) {
@@ -297,4 +317,32 @@ void MagsLogger::doGpsOff()
     LOG_F(INFO, "Mags - do GPS OFF: EKF source set %d", ekfSrcNoGps);
     mavlinkProvider->sendSetEkfSourceSet(ekfSrcNoGps);
     mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - GPS disabled (EKF SRC)");
+}
+
+void MagsLogger::doGpsOnAux()
+{
+    if (!mavlinkProvider->isPlaneReady()) {
+        LOG_F(WARNING, "Mags - do GPS ON (AUX): plane not ready");
+        return;
+    }
+
+    // ArduPilot aux switch level: source set N is selected by level N-1 (0=low, 1=middle, 2=high).
+    const int switchPos = ekfSrcGps - 1;
+    LOG_F(INFO, "Mags - do GPS ON (AUX): func %d  source set %d  switch pos %d", ekfSourceAuxFunction, ekfSrcGps, switchPos);
+    mavlinkProvider->sendDoAuxFunction(ekfSourceAuxFunction, switchPos);
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - GPS enabled (EKF AUX)");
+}
+
+void MagsLogger::doGpsOffAux()
+{
+    if (!mavlinkProvider->isPlaneReady()) {
+        LOG_F(WARNING, "Mags - do GPS OFF (AUX): plane not ready");
+        return;
+    }
+
+    // ArduPilot aux switch level: source set N is selected by level N-1 (0=low, 1=middle, 2=high).
+    const int switchPos = ekfSrcNoGps - 1;
+    LOG_F(INFO, "Mags - do GPS OFF (AUX): func %d  source set %d  switch pos %d", ekfSourceAuxFunction, ekfSrcNoGps, switchPos);
+    mavlinkProvider->sendDoAuxFunction(ekfSourceAuxFunction, switchPos);
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - GPS disabled (EKF AUX)");
 }

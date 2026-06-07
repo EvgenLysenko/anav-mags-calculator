@@ -14,6 +14,8 @@ void MagsCalculator::onStarted()
 {
     logInfo("MagsCalculator - started");
 
+    std::lock_guard<std::mutex> lock(recordsMutex);
+
     recordsAccumulator.reserve(MagsCalculator::WINDOW_SIZE);
 }
 

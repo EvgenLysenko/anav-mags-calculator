@@ -70,10 +70,12 @@ CON_OBJS := $(CON_SRCS:%.cpp=$(BUILD_DIR)/connection-%.o)
 MAV_DIR = $(SRC_DIR)/mav
 MAV_SRCS = \
     mavlink_provider.cpp\
-    mavlink_provider_messages.cpp
+    mavlink_provider_messages.cpp\
+    param_setter.cpp
 MAV_DEPS = \
     $(MAV_DIR)/flight_mode.h\
-    $(MAV_DIR)/mavlink_provider.h
+    $(MAV_DIR)/mavlink_provider.h\
+    $(MAV_DIR)/param_setter.h
 MAV_OBJS := $(MAV_SRCS:%.cpp=$(BUILD_DIR)/mav-%.o)
 
 LIB_LOGURU_SRCS := $(shell find $(LIB_DIR)/loguru -name '*.cpp' -or -name '*.c' -or -name '*.s')
