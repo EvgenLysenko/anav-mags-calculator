@@ -17,7 +17,6 @@ public:
 class IMavlinkSender {
 public:
     virtual void send(const mavlink_message_t& mavlink_message) = 0;
-    virtual void sendParamSet(const char* paramId, float value) = 0;
 };
 
 class MavlinkProvider: public IMavlinkSender
@@ -65,7 +64,12 @@ public:
     }
 
     void addMavlinkReceiver(IMavlinkReceiver* messageReceiver) {
+        this->mavlinkReceivers.remove(messageReceiver);
         this->mavlinkReceivers.push_back(messageReceiver);
+    }
+
+    void remMavlinkReceiver(IMavlinkReceiver* messageReceiver) {
+        this->mavlinkReceivers.remove(messageReceiver);
     }
 
     void process();
@@ -98,8 +102,9 @@ public:
 
     void sendArm(bool forced = false);
     void sendDisarm(bool forced = false);
-    void sendRequestParam(const char* paramId);
-    virtual void sendParamSet(const char* paramId, float value);
+    
+    void sendParamRequest(const char* paramId);
+    void sendParamSet(const char* paramId, float value);
 
     void sendSetEkfSourceSet(int sourceSet);
     void sendDoAuxFunction(int auxFunction, int switchPos);

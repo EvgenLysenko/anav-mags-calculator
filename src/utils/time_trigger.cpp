@@ -1,9 +1,9 @@
 #include "time_trigger.h"
 #include "time_utils.h"
 
-TimeTrigger::TimeTrigger(long period, int count): period(period), count(count)
+TimeTrigger::TimeTrigger(long period, int count, bool startImmediately): period(period), count(count)
 {
-    this->time = TimeUtils::getTime();
+    this->time = startImmediately ? 0 : TimeUtils::getTime();
 }
 
 bool TimeTrigger::isFired(long curTime)
@@ -30,4 +30,12 @@ bool TimeTrigger::isFired(long curTime)
 bool TimeTrigger::isFired()
 {
     return isFired(TimeUtils::getTime());
+}
+
+void TimeTrigger::start(long period, int count, bool startImmediately)
+{
+    this->period = period;
+    this->count = count;
+
+    this->time = startImmediately ? 0 :TimeUtils::getTime();
 }

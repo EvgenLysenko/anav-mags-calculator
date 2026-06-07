@@ -4,13 +4,14 @@
 class TimeTrigger
 {
 protected:
-    const long period = 0;
-    long time = 0;
+    long period = 0;
     int count = 0;
+    long time = 0;
 
 public:
-    TimeTrigger(long period, int count = -1);
-
+    TimeTrigger() : period(0), count(0), time(0) {}
+    TimeTrigger(long period, int count = -1, bool startImmediately = false); // -1 means infinite
+    void start(long period, int count = -1, bool startImmediately = false);
     bool isFired();
     bool isFired(long curTime);
 };

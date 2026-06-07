@@ -16,13 +16,13 @@ void ParamSetter::onMessageReceived(const mavlink_message_t& mavlink_message)
         char paramId[MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN + 1] = {0};
         memcpy(paramId, param_value.param_id, MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN);
 
-        logInfo("Mags - param value: %s = %f", paramId, param_value.param_value);
+        logInfo("mav param setter - param received: %s = %f", paramId, param_value.param_value);
 
         if (paramName == paramId) {
             if (param_value.param_value == paramValue)
                 confirm(true);
 
-            logInfo("Mags - param set confirmed: %s = %f", paramId, param_value.param_value);
+            logInfo("mav param setter - param confirmed: %s = %f", paramId, param_value.param_value);
         }
     }
 }
@@ -35,22 +35,26 @@ void ParamSetter::loop()
     const long curTime = TimeUtils::getTime();
 
     if (TimeUtils::isTimeout(curTime, commandSendTime, repeatTimeout)) {
-        logInfo("Mags - param requester: \"%s\"  size: %d  tries: %d", paramName.c_str(), (int)paramName.size(), sendCountLeft);
+        logInfo("mav param setter - param requester: \"%s\"  size: %d  tries: %d", paramName.c_str(), (int)paramName.size(), sendCountLeft);
 
-        if (mavSender) {
-            mavSender->sendParamSet(paramName.c_str(), paramValue);
-        }
-        else {
-            logError("Mags - param requester - sender not defined");
-        }
-
-        commandSendTime = curTime;
-
-        if (sendCountLeft > 0)
-            --sendCountLeft;
-
-        if (sendCountLeft == 0) {
-            logInfo("Mags - param requester: \"%s\"  tries: 0  finished", paramName.c_str());
-        }
+        doNow();
     }
+}
+
+void ParamSetter::doNow()
+{
+    if (!mavProvider) {
+        logError("mav param setter - mav provider not defined");
+        return;
+    }
+
+    mavProvider->sendParamSet(paramName.c_str(), paramValue);
+    mavProvider->sendParamRequest(paramName.c_str());
+
+    commandSendTime = TimeUtils::getTime();
+    if (sendCountLeft > 0)
+        --sendCountLeft;
+
+    if (sendCountLeft == 0)
+        logInfo("mav param setter - param requester: \"%s\"  value: %f  tries: 0  finished", paramName.c_str(), paramValue);
 }

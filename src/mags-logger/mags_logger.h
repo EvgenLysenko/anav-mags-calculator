@@ -12,6 +12,7 @@
 #include "mav/param_setter.h"
 #include "utils/command_requester.h"
 #include "utils/time_trigger.h"
+#include "gps_on_off_switcher.h"
 
 struct Counter {
     unsigned int count = 0;
@@ -28,7 +29,7 @@ class MagsLogger: public TaskBase, public INmeaSentenceReceiver, public IMavlink
 {
 public:
     MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider* mavlinkProvider);
-
+    virtual ~MagsLogger();
     virtual const char* getTaskName() const { return "MagsLogger"; }
     //virtual void run();
 
@@ -85,13 +86,6 @@ public:
     }
 
     bool wait_gps = true;
-
-    int ekfSrcGps = 1;
-    int ekfSrcNoGps = 2;
-
-    // ArduPilot RCx_OPTION used to select the active EKF source set via aux function.
-    // Switch position low/middle/high maps to source set 1/2/3.
-    int ekfSourceAuxFunction = 90;
 
     class IMagsDataListener {
     public:
@@ -170,23 +164,9 @@ protected:
     void onSwitchToAccel();
     void returnStatus();
 
-    enum GpsRequestType {
-        GPS_REQUEST_TYPE_NONE = 0,
-        GPS_REQUEST_TYPE_ON,
-        GPS_REQUEST_TYPE_OFF,
-        // GPS_REQUEST_TYPE_ON_AUX,
-        // GPS_REQUEST_TYPE_OFF_AUX,
-    };
-
-    GpsRequestType gpsRequestType = GPS_REQUEST_TYPE_NONE;
-    ParamSetter gpsOnOff_AHRS_GPS_USE_Setter;
-    CommandRequester gpsOnOff_EK3_SOURCE_SET_Requester;
-    void onGpsOnRequested(GpsRequestType gpsRequestType);
-    void onGpsOn();
-    void onGpsOff();
-
 protected:
     MavlinkProvider* const mavlinkProvider;
+    GPSOnOffSwitcher gpsOnOffSwitcher;
     virtual void onMessageReceived(const mavlink_message_t& message);
 
     void on_msg_system_time_receved(const mavlink_message_t* message);

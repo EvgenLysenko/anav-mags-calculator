@@ -5,14 +5,10 @@
 
 class ParamSetter: public IMavlinkReceiver {
 public:
-    ParamSetter() {}
-    IMavlinkSender* mavSender = 0;
+    ParamSetter(MavlinkProvider* mavProvider): mavProvider(mavProvider) {}
+    MavlinkProvider* const mavProvider;
     int repeatCount = 0;
     long repeatTimeout = 0;
-
-    void init(IMavlinkSender* mavSender) {
-        this->mavSender = mavSender;
-    }
 
 protected:
     int id = 0;
@@ -25,17 +21,19 @@ protected:
     bool commandIsConfirmed = true;
 
 public:
-    void setParam(const std::string& paramName, float paramValue, int repeatCount, long repeatTimeout, int id, int tag = 0) {
+    void setParam(const std::string& paramName, float paramValue, long repeatTimeout, int repeatCount, int id, int tag = 0) {
         this->id = id;
         this->tag = tag;
         this->paramName = paramName;
         this->paramValue = paramValue;
-        this->repeatCount = repeatCount;
         this->repeatTimeout = repeatTimeout;
+        this->repeatCount = repeatCount;
         this->commandSendTime = 0;
         this->sendCountLeft = repeatCount;
         this->commandIsConfirmed = false;
     }
+
+    void doNow();
 
     int getId() const { return id; }
     int getTag() const { return tag; }

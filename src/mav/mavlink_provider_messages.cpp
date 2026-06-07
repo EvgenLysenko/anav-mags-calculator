@@ -189,7 +189,7 @@ void MavlinkProvider::sendDoAuxFunction(int auxFunction, int switchPos)
     sendCommandLong(plane_system_id, plane_component_id, MAV_CMD_DO_AUX_FUNCTION, 0, (float)auxFunction, (float)switchPos, 0, 0, 0, 0, 0);
 }
 
-void MavlinkProvider::sendRequestParam(const char* paramId)
+void MavlinkProvider::sendParamRequest(const char* paramId)
 {
     mavlink_message_t message;
 

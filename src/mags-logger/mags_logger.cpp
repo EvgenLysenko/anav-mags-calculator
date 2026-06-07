@@ -35,12 +35,20 @@ static const long MAGS_VALUES_SEND_PERIOD = 3000;
 MagsLogger::MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider* mavlinkProvider):
     TaskBase(),
     nmeaSentenceSender(nmeaSentenceSender),
-    mavlinkProvider(mavlinkProvider)
+    mavlinkProvider(mavlinkProvider),
+    gpsOnOffSwitcher(mavlinkProvider)
 {
     ccrGetRequester.init(nmeaSentenceSender);
     ccrSetRequester.init(nmeaSentenceSender);
     outSetCommandRequester.init(nmeaSentenceSender);
+    mavlinkProvider->addMavlinkReceiver(&gpsOnOffSwitcher);
     mavlinkProvider->addMavlinkReceiver(this);
+}
+
+MagsLogger::~MagsLogger()
+{
+    mavlinkProvider->remMavlinkReceiver(&gpsOnOffSwitcher);
+    mavlinkProvider->remMavlinkReceiver(this);
 }
 
 void MagsLogger::onCcrSet(int ccr, int repeatCount)
@@ -277,6 +285,7 @@ void MagsLogger::onStarted()
     logInfo("MagsLogger - started");
 
     initParams();
+    gpsOnOffSwitcher.init();
 }
 
 void MagsLogger::initParams()
@@ -310,10 +319,6 @@ void MagsLogger::initParams()
 
     logInfo("Mags - inverted: x: %d  y: %d  z: %d", x_inverted, y_inverted, z_inverted);
     logInfo("Mags - xy_switched: %d", xy_switched);
-
-    ekfSrcGps = Config::readInt("mags/ekf_src_gps", 1);
-    ekfSrcNoGps = Config::readInt("mags/ekf_src_no_gps", 2);
-    logInfo("Mags - EKF source sets: gps: %d  no_gps: %d", ekfSrcGps, ekfSrcNoGps);
 }
 
 void MagsLogger::logInit()
@@ -449,15 +454,9 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
 
     magsLogValues();
 
-    if (gpsRequestType != GPS_REQUEST_TYPE_NONE) {
-        gpsOnOff_EK3_SOURCE_SET_Requester.loop();
-        gpsOnOff_AHRS_GPS_USE_Setter.loop();
-
-        if (gpsOnOff_AHRS_GPS_USE_Setter.isFinished() && gpsOnOff_EK3_SOURCE_SET_Requester.isFinished()) {
-            gpsRequestType = GPS_REQUEST_TYPE_NONE;
-
-            // TODO check if the command was successful
-        }
+    gpsOnOffSwitcher.loop();
+    if (gpsOnOffSwitcher.isFinished()) {
+        // TODO check if the command was successful
     }
 
     return magsInitialized || logStarted ? RUN_THREAD_TIMEOUT_IN_PROGRESS : default_timeout;
