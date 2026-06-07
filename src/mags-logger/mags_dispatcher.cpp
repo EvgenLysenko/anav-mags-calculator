@@ -156,12 +156,12 @@ void MagsLogger::on_command_long_received(const mavlink_message_t* message)
         }
         case MAGS_GPS_ON: {
             LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_ON");
-            gpsOnOffSwitcher.onGpsOn();
+            gpsOnOffSwitcher.requestGpsOn();
             break;
         }
         case MAGS_GPS_OFF: {
             LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_OFF");
-            gpsOnOffSwitcher.onGpsOff();
+            gpsOnOffSwitcher.requestGpsOff();
             break;
         }
         default:

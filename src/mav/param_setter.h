@@ -15,17 +15,19 @@ protected:
     int tag = 0;
     std::string paramName;
     float paramValue;
+    MAV_PARAM_TYPE paramType;
     bool commandRequested = false;
     long commandSendTime = 0;
     int sendCountLeft = 0;
     bool commandIsConfirmed = true;
 
 public:
-    void setParam(const std::string& paramName, float paramValue, long repeatTimeout, int repeatCount, int id, int tag = 0) {
+    void setParam(const std::string& paramName, float paramValue, MAV_PARAM_TYPE paramType, long repeatTimeout, int repeatCount, int id, int tag = 0) {
         this->id = id;
         this->tag = tag;
         this->paramName = paramName;
         this->paramValue = paramValue;
+        this->paramType = paramType;
         this->repeatTimeout = repeatTimeout;
         this->repeatCount = repeatCount;
         this->commandSendTime = 0;

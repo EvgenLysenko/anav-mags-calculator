@@ -211,7 +211,7 @@ void MavlinkProvider::sendParamRequest(const char* paramId)
     send(message);
 }
 
-void MavlinkProvider::sendParamSet(const char* paramId, float value)
+void MavlinkProvider::sendParamSet(const char* paramId, float value, MAV_PARAM_TYPE paramType)
 {
     if (!isPlaneReady()) {
         logWarning("send PARAM_SET: plane not ready");
@@ -224,7 +224,7 @@ void MavlinkProvider::sendParamSet(const char* paramId, float value)
     param_set.target_system = plane_system_id;
     param_set.target_component = plane_component_id;
     param_set.param_value = value;
-    param_set.param_type = MAV_PARAM_TYPE_REAL32;
+    param_set.param_type = (uint8_t)paramType;
 
     for (int i = 0; i < (int)sizeof(param_set.param_id); ++i) {
         if (paramId && *paramId) {

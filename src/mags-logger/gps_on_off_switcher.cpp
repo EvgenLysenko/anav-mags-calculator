@@ -50,7 +50,7 @@ void GPSOnOffSwitcher::loop()
             }
         }
 
-        if (gpsOnOff_AHRS_GPS_USE_Setter.isFinished()) {// && gpsOnOff_EK3_SOURCE_SET_Requester.isFinished()) {
+        if (gpsOnOff_AHRS_GPS_USE_Setter.isFinished() && gpsOnOff_EK3_SOURCE_SET_Trigger.isFinished()) {// && gpsOnOff_EK3_SOURCE_SET_Requester.isFinished()) {
             gpsRequestType = GPS_REQUEST_TYPE_NONE;
 
             // TODO check if the command was successful
@@ -58,22 +58,23 @@ void GPSOnOffSwitcher::loop()
     }
 }
 
-void GPSOnOffSwitcher::onGpsOn()
+void GPSOnOffSwitcher::requestGpsOn()
 {
     logInfo("GPS Swither - GPS ON");
     gpsRequestType = GPS_REQUEST_TYPE_ON;
-    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 1.0f, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestType);
+    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 1.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
     gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT);
     doGpsOn();
 }
 
-void GPSOnOffSwitcher::onGpsOff()
+void GPSOnOffSwitcher::requestGpsOff()
 {
     logInfo("GPS Swither - GPS OFF");
     gpsRequestType = GPS_REQUEST_TYPE_OFF;
-    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 0.0f, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestType);
+
+    gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 0.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
     gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT);
@@ -88,8 +89,8 @@ void GPSOnOffSwitcher::doGpsOn()
     }
 
     logInfo("GPS Swither - do GPS ON: EKF source set %d", EK3_SRC_GPS);
-    mavlinkProvider->sendSetEkfSourceSet(EK3_SRC_GPS);
-    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "GPS Swither - GPS enabled (EKF SRC)");
+    mavlinkProvider->sendDoAuxFunction(EKF_SOURCE_AUX_FUNCTION, EK3_SRC_GPS - 1); // -1 because low position is 0
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "GPS Swither - GPS enable (EKF SRC)");
 }
 
 void GPSOnOffSwitcher::doGpsOff()
@@ -100,6 +101,6 @@ void GPSOnOffSwitcher::doGpsOff()
     }
 
     logInfo("GPS Swither - do GPS OFF: EKF source set %d", EK3_SRC_NO_GPS);
-    mavlinkProvider->sendSetEkfSourceSet(EK3_SRC_NO_GPS);
-    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "Mags - GPS disabled (EKF SRC)");
+    mavlinkProvider->sendDoAuxFunction(EKF_SOURCE_AUX_FUNCTION, EK3_SRC_NO_GPS - 1); // -1 because low position is 0
+    mavlinkProvider->sendStatusText(MAV_SEVERITY_INFO, "GPS Swither - GPS disable (EKF SRC)");
 }

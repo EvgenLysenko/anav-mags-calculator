@@ -48,7 +48,7 @@ void ParamSetter::doNow()
         return;
     }
 
-    mavProvider->sendParamSet(paramName.c_str(), paramValue);
+    mavProvider->sendParamSet(paramName.c_str(), paramValue, paramType);
     mavProvider->sendParamRequest(paramName.c_str());
 
     commandSendTime = TimeUtils::getTime();

@@ -40,8 +40,8 @@ public:
     GpsRequestType gpsRequestType = GPS_REQUEST_TYPE_NONE;
     ParamSetter gpsOnOff_AHRS_GPS_USE_Setter;
     TimeTrigger gpsOnOff_EK3_SOURCE_SET_Trigger;
-    void onGpsOn();
-    void onGpsOff();
+    void requestGpsOn();
+    void requestGpsOff();
     void doGpsOn();
     void doGpsOff();
 };

@@ -104,7 +104,7 @@ public:
     void sendDisarm(bool forced = false);
     
     void sendParamRequest(const char* paramId);
-    void sendParamSet(const char* paramId, float value);
+    void sendParamSet(const char* paramId, float value, MAV_PARAM_TYPE paramType);
 
     void sendSetEkfSourceSet(int sourceSet);
     void sendDoAuxFunction(int auxFunction, int switchPos);

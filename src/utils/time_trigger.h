@@ -14,6 +14,7 @@ public:
     void start(long period, int count = -1, bool startImmediately = false);
     bool isFired();
     bool isFired(long curTime);
+    bool isFinished() const { return count <= 0; }
 };
 
 #endif
