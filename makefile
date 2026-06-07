@@ -38,13 +38,17 @@ UTILS_SRCS = \
     time_utils.cpp\
     parse_utils.cpp\
     CsvParser.cpp\
-    StringUtils.cpp
+    StringUtils.cpp\
+    command_requester.cpp\
+    time_trigger.cpp
 UTILS_DEPS = \
     $(UTILS_DIR)/time_utils.h\
     $(UTILS_DIR)/math_utils.h\
     $(UTILS_DIR)/parse_utils.h\
     $(UTILS_DIR)/CsvParser.h\
-    $(UTILS_DIR)/StringUtils.h
+    $(UTILS_DIR)/StringUtils.h\
+    $(UTILS_DIR)/command_requester.h\
+    $(UTILS_DIR)/time_trigger.h
 UTILS_OBJS := $(UTILS_SRCS:%.cpp=$(BUILD_DIR)/utils-%.o)
 
 COMMON_DIR = $(SRC_DIR)/common

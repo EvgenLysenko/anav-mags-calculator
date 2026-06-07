@@ -211,6 +211,37 @@ void MavlinkProvider::sendRequestParam(const char* paramId)
     send(message);
 }
 
+void MavlinkProvider::sendParamSet(const char* paramId, float value)
+{
+    if (!isPlaneReady()) {
+        logWarning("send PARAM_SET: plane not ready");
+        return;
+    }
+
+    logInfo("send PARAM_SET: from %d/%d  to %d/%d  param: %s = %f", compSystemId, compComponentId, plane_system_id, plane_component_id, paramId ? paramId : "", value);
+
+    mavlink_param_set_t param_set = {0};
+    param_set.target_system = plane_system_id;
+    param_set.target_component = plane_component_id;
+    param_set.param_value = value;
+    param_set.param_type = MAV_PARAM_TYPE_REAL32;
+
+    for (int i = 0; i < (int)sizeof(param_set.param_id); ++i) {
+        if (paramId && *paramId) {
+            param_set.param_id[i] = *paramId++;
+        }
+        else {
+            paramId = 0;
+            param_set.param_id[i] = 0;
+        }
+    }
+
+    mavlink_message_t message;
+    mavlink_msg_param_set_encode(compSystemId, compComponentId, &message, &param_set);
+
+    send(message);
+}
+
 void MavlinkProvider::sendGuidedPosition(double lat, double lon, float alt)
 {
     mavlink_mission_item_int_t mission_item;

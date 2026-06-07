@@ -153,7 +153,7 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
         outAccelDetected = !TimeUtils::isTimeout(curTime, accelDetectedLastTime, 1000);
 
         if (DEBUG_OUT_ENABLED) {
-            static TimerTrigger trigger(10000);
+            static TimeTrigger trigger(10000);
             if (trigger.isFired(curTime)) {
                 logInfo("Mags - %s", (const char*)buffer);
                 logInfo("Mags - debug - mags data: %s  count %d  time mags %d  accel %d,  mags detect time: %ld  detected %d  vector: %d, %d, %d",
@@ -182,14 +182,14 @@ void MagsLogger::onNmeaSentenceReceived(const unsigned char* buffer, int length)
         }
 
         if (!outMagsDetected && !outAccelDetected) {
-            static TimerTrigger trigger(10000);
+            static TimeTrigger trigger(10000);
             if (trigger.isFired(curTime)) {
                 logInfo("Mags - no detect: %s  time mags %d  accel %d,  mags detect time: %ld  detected %d", (const char*)buffer, magsTime, accelTime, magsDetectedLastTime, (int)outMagsDetected);
             }
         }
         else if (outMagsDetected) {
             if (mags.size() >= 2 && ((!mags[0].x && !mags[0].y && !mags[0].z) || (!mags[1].x && !mags[1].y && !mags[1].z))) {
-                static TimerTrigger trigger(10000);
+                static TimeTrigger trigger(10000);
                 if (trigger.isFired(curTime)) {
                     logInfo("Mags - no mags data: %s  time mags %d  accel %d,  mags detect time: %ld  detected %d  vector: %d, %d, %d",
                             (const char*)buffer, magsTime, accelTime, magsDetectedLastTime, (int)outMagsDetected,
@@ -449,8 +449,16 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
 
     magsLogValues();
 
-    gpsOnOff_EK3_SOURCE_SET_Requester.loop();
-    gpsOnOff_AHRS_GPS_USE_Requester.loop();
+    if (gpsRequestType != GPS_REQUEST_TYPE_NONE) {
+        gpsOnOff_EK3_SOURCE_SET_Requester.loop();
+        gpsOnOff_AHRS_GPS_USE_Setter.loop();
+
+        if (gpsOnOff_AHRS_GPS_USE_Setter.isFinished() && gpsOnOff_EK3_SOURCE_SET_Requester.isFinished()) {
+            gpsRequestType = GPS_REQUEST_TYPE_NONE;
+
+            // TODO check if the command was successful
+        }
+    }
 
     return magsInitialized || logStarted ? RUN_THREAD_TIMEOUT_IN_PROGRESS : default_timeout;
 }
@@ -542,50 +550,4 @@ void MagsLogger::magsLogValues()
     for (Mag& mag: mags) {
         mag.logged = true;
     }
-}
-
-void MagsLogger::CommandRequester::loop()
-{
-    if (isFinished())
-        return;
-
-    const long curTime = TimeUtils::getTime();
-
-    if (TimeUtils::isTimeout(curTime, commandSendTime, repeatTimeout)) {
-        logInfo("Mags - command requester: \"%s\"  size: %d  tries: %d", command.c_str(), (int)command.size(), sendCountLeft);
-
-        if (sender) {
-            sender->send((const unsigned char*)command.c_str(), command.size());
-        }
-        else {
-            logError("Mags - command requester - sender not defined");
-        }
-
-        commandSendTime = curTime;
-        
-        if (sendCountLeft > 0)
-            --sendCountLeft;
-
-        if (sendCountLeft == 0) {
-            logInfo("Mags - command requester: \"%s\"  tries: 0  finished", command.c_str());
-        }
-    }
-}
-
-TimerTrigger::TimerTrigger(long period): period(period) {
-    this->time = TimeUtils::getTime();
-}
-
-bool TimerTrigger::isFired(long curTime) {
-    if (TimeUtils::isTimeout(curTime, time, period)) {
-        time = curTime;
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-bool TimerTrigger::isFired() {
-    return isFired(TimeUtils::getTime());
 }

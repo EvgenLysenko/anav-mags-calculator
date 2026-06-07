@@ -291,8 +291,16 @@ void MagsLogger::onGpsOff()
 void MagsLogger::onGpsOnRequested(GpsRequestType gpsRequestType)
 {
     this->gpsRequestType = gpsRequestType;
-    gpsOnOff_EK3_SOURCE_SET_Requester.setCommand("", 5, 1000, gpsRequestType);
-    gpsOnOff_AHRS_GPS_USE_Requester.setCommand("", 5, 1000, gpsRequestType);
+    switch (gpsRequestType) {
+    case GPS_REQUEST_TYPE_ON:
+        gpsOnOff_AHRS_GPS_USE_Setter.setParam("AHRS_GPS_USE", 1.0f, 5, 1000, gpsRequestType);
+        gpsOnOff_EK3_SOURCE_SET_Requester.setCommand("", 5, 1000, gpsRequestType);
+        break;
+    case GPS_REQUEST_TYPE_OFF:
+        gpsOnOff_AHRS_GPS_USE_Setter.setParam("AHRS_GPS_USE", 0.0f, 5, 1000, gpsRequestType);
+        gpsOnOff_EK3_SOURCE_SET_Requester.setCommand("", 5, 1000, gpsRequestType);
+        break;
+    }
 }
 
 void MagsLogger::doGpsOn()

@@ -1,35 +1,35 @@
-#ifndef __PARAM_SETTER_H__
-#define __PARAM_SETTER_H__
+#ifndef __COMMAND_REQUESTER_H__
+#define __COMMAND_REQUESTER_H__
 
-#include "mavlink_provider.h"
+#include "mags-logger/nmea_sentence_reader.h"
+#include <string>
 
-class ParamSetter: public IMavlinkReceiver {
+class CommandRequester
+{
 public:
-    ParamSetter() {}
-    IMavlinkSender* mavSender = 0;
+    CommandRequester() {}
+    INmeaSentenceSender* sender = 0;
     int repeatCount = 0;
     long repeatTimeout = 0;
 
-    void init(IMavlinkSender* mavSender) {
-        this->mavSender = mavSender;
+    void init(INmeaSentenceSender* nmeaSentenceSender) {
+        this->sender = nmeaSentenceSender;
     }
 
 protected:
     int id = 0;
     int tag = 0;
-    std::string paramName;
-    float paramValue;
+    std::string command;
     bool commandRequested = false;
     long commandSendTime = 0;
     int sendCountLeft = 0;
     bool commandIsConfirmed = true;
 
 public:
-    void setParam(const std::string& paramName, float paramValue, int repeatCount, long repeatTimeout, int id, int tag = 0) {
+    void setCommand(const std::string& command, int repeatCount, long repeatTimeout, int id, int tag = 0) {
         this->id = id;
         this->tag = tag;
-        this->paramName = paramName;
-        this->paramValue = paramValue;
+        this->command = command;
         this->repeatCount = repeatCount;
         this->repeatTimeout = repeatTimeout;
         this->commandSendTime = 0;
@@ -39,8 +39,7 @@ public:
 
     int getId() const { return id; }
     int getTag() const { return tag; }
-    const std::string& getParamName() const { return paramName; }
-    float getParamValue() const { return paramValue; }
+    const std::string& getCommand() const { return command; }
     void confirm(bool confirmed) { commandIsConfirmed = confirmed; }
     void confirmOk() { commandIsConfirmed = true; }
 
@@ -48,7 +47,7 @@ public:
     bool isCommandConfirmed() const;
 
     virtual void loop();
-    virtual void onMessageReceived(const mavlink_message_t& mavlink_message);
 };
+
 
 #endif

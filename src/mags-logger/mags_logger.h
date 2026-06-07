@@ -9,6 +9,9 @@
 #include "mav/mavlink_provider.h"
 #include "common/position.h"
 #include "common/attitude.h"
+#include "mav/param_setter.h"
+#include "utils/command_requester.h"
+#include "utils/time_trigger.h"
 
 struct Counter {
     unsigned int count = 0;
@@ -19,19 +22,6 @@ struct Counter {
         count = counter;
         counter = 0;
     }
-};
-
-class TimerTrigger
-{
-protected:
-    const long period = 0;
-    long time = 0;
-
-public:
-    TimerTrigger(long period);
-
-    bool isFired();
-    bool isFired(long curTime);
 };
 
 class MagsLogger: public TaskBase, public INmeaSentenceReceiver, public IMavlinkReceiver
@@ -49,50 +39,6 @@ public:
 
     static bool MAGS_FULL_TRACE_ENABLED;
     static bool DEBUG_OUT_ENABLED;
-
-    class CommandRequester {
-    public:
-        CommandRequester() {}
-        INmeaSentenceSender* sender = 0;
-        int repeatCount = 0;
-        long repeatTimeout = 0;
-
-        void init(INmeaSentenceSender* nmeaSentenceSender) {
-            this->sender = nmeaSentenceSender;
-        }
-
-    protected:
-        int id = 0;
-        int tag = 0;
-        std::string command;
-        bool commandRequested = false;
-        long commandSendTime = 0;
-        int sendCountLeft = 0;
-        bool commandIsConfirmed = true;
-
-    public:
-        void setCommand(const std::string& command, int repeatCount, long repeatTimeout, int id, int tag = 0) {
-            this->id = id;
-            this->tag = tag;
-            this->command = command;
-            this->repeatCount = repeatCount;
-            this->repeatTimeout = repeatTimeout;
-            this->commandSendTime = 0;
-            this->sendCountLeft = repeatCount;
-            this->commandIsConfirmed = false;
-        }
-
-        int getId() const { return id; }
-        int getTag() const { return tag; }
-        const std::string& getCommand() const { return command; }
-        void confirm(bool confirmed) { commandIsConfirmed = confirmed; }
-        void confirmOk() { commandIsConfirmed = true; }
-
-        bool isFinished() const { return commandIsConfirmed || sendCountLeft == 0; }
-        bool isCommandConfirmed() const;
-
-        virtual void loop();
-    };
 
 public:
     enum MagsCommandId {
@@ -233,7 +179,7 @@ protected:
     };
 
     GpsRequestType gpsRequestType = GPS_REQUEST_TYPE_NONE;
-    CommandRequester gpsOnOff_AHRS_GPS_USE_Requester;
+    ParamSetter gpsOnOff_AHRS_GPS_USE_Setter;
     CommandRequester gpsOnOff_EK3_SOURCE_SET_Requester;
     void onGpsOnRequested(GpsRequestType gpsRequestType);
     void onGpsOn();

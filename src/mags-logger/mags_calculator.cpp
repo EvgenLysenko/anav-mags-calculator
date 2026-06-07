@@ -31,7 +31,7 @@ void MagsCalculator::onMagsDataReceived(uint32_t time, const MagsLogger::Mag& ma
         }
     }
 
-    static TimerTrigger trigger(1000);
+    static TimeTrigger trigger(1000);
     if (trigger.isFired())
         logInfo("MagsCalculator - mags received. total: %d", (int)recordsAccumulator.size());
 }
