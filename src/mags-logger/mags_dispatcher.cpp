@@ -21,7 +21,7 @@ static const int STATUS_BIT_OUT_ACCEL = 0x10;
 static const int STATUS_BIT_FULL_TRACE_ENEBLED = 0x20;
 static const int STATUS_BIT_DEBUG_ENABLED = 0x40;
 static const int STATUS_BIT_UNUSED = 0x80;
-static const int STATUS_BIT_GPS_REQUEST_RESULT_MASK = 0x100 | 0x200 | 0x400 | 0x800; // 0xF00 // OK | ON OFF | failed | in progress
+static const int STATUS_BIT_GPS_REQUEST_RESULT_MASK = 0x100 | 0x200 | 0x400 | 0x800 | 0x1000; // 0x1F00 // OK | ON | OFF | failed | in progress
 static const int STATUS_BIT_GPS_REQUEST_RESULT_SHIFT = 8;
 
 void MagsLogger::onMessageReceived(const mavlink_message_t& message)

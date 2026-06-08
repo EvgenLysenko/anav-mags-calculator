@@ -125,6 +125,8 @@ void GPSOnOffSwitcher::loop()
                 logInfo("GPS Swither - GPS %d request failed", (int)gpsRequestedType);
             }
 
+            logInfo("GPS Swither - GPS result: %d", (int)gpsRequestResult);
+
             gpsRequestedType = GPS_REQUEST_TYPE_NONE;
         }
     }
