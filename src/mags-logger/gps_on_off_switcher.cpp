@@ -5,6 +5,7 @@
 #include <cstring>
 
 const char* AHRS_GPS_USE_PARAM_NAME = "AHRS_GPS_USE";
+const int GPS_ON_OFF_SRC_REPEAT_COUNT = 1;
 const int GPS_ON_OFF_REPEAT_COUNT = 7;
 const int GPS_ON_OFF_REPEAT_TIMEOUT = 1000;
 
@@ -141,7 +142,7 @@ void GPSOnOffSwitcher::requestGpsOn()
     gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 1.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestedType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
-    gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT);
+    gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_SRC_REPEAT_COUNT);
     doGpsOn();
 }
 
@@ -154,7 +155,7 @@ void GPSOnOffSwitcher::requestGpsOff()
     gpsOnOff_AHRS_GPS_USE_Setter.setParam(AHRS_GPS_USE_PARAM_NAME, 0.0f, MAV_PARAM_TYPE_UINT8, GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT, gpsRequestedType);
     gpsOnOff_AHRS_GPS_USE_Setter.doNow();
 
-    gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_REPEAT_COUNT);
+    gpsOnOff_EK3_SOURCE_SET_Trigger.start(GPS_ON_OFF_REPEAT_TIMEOUT, GPS_ON_OFF_SRC_REPEAT_COUNT);
     doGpsOff();
 }
 
