@@ -13,6 +13,7 @@
 #include "utils/command_requester.h"
 #include "utils/time_trigger.h"
 #include "gps_on_off_switcher.h"
+#include "gps_source_switcher.h"
 
 struct Counter {
     unsigned int count = 0;
@@ -63,6 +64,8 @@ public:
         MAGS_IP = 2024,
         MAGS_GPS_ON = 2025,
         MAGS_GPS_OFF = 2026,
+        MAGS_GPS_SOURCE_FC = 2027,
+        MAGS_GPS_SOURCE_EXTERNAL = 2028,
     };
 
     struct Mag {
@@ -167,6 +170,7 @@ protected:
 protected:
     MavlinkProvider* const mavlinkProvider;
     GPSOnOffSwitcher gpsOnOffSwitcher;
+    GpsSourceSwitcher gpsSourceSwitcher;
     virtual void onMessageReceived(const mavlink_message_t& message);
 
     void on_msg_system_time_receved(const mavlink_message_t* message);

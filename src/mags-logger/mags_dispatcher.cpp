@@ -23,6 +23,8 @@ static const int STATUS_BIT_DEBUG_ENABLED = 0x40;
 static const int STATUS_BIT_UNUSED = 0x80;
 static const int STATUS_BIT_GPS_REQUEST_RESULT_MASK = 0x100 | 0x200 | 0x400 | 0x800 | 0x1000; // 0x1F00 // OK | ON | OFF | failed | in progress
 static const int STATUS_BIT_GPS_REQUEST_RESULT_SHIFT = 8;
+static const int STATUS_BIT_GPS_SOURCE_MASK = 0x2000 | 0x4000; // active GPS primary: 0 unknown, 1 FC, 2 external
+static const int STATUS_BIT_GPS_SOURCE_SHIFT = 13;
 
 void MagsLogger::onMessageReceived(const mavlink_message_t& message)
 {
@@ -167,6 +169,16 @@ void MagsLogger::on_command_long_received(const mavlink_message_t* message)
             gpsOnOffSwitcher.requestGpsOff();
             break;
         }
+        case MAGS_GPS_SOURCE_FC: {
+            LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_SOURCE_FC");
+            gpsSourceSwitcher.requestGpsFc();
+            break;
+        }
+        case MAGS_GPS_SOURCE_EXTERNAL: {
+            LOG_F(INFO, "Mags - on_command_long received: MAGS_GPS_SOURCE_EXTERNAL");
+            gpsSourceSwitcher.requestGpsExternal();
+            break;
+        }
         default:
             LOG_F(INFO, "Mags - on_command_long received: %d", command);
             break;
@@ -188,6 +200,10 @@ void MagsLogger::sendCommandInt(MagsCommandId magsCommandId, float param1, float
 
 void MagsLogger::sendStatus()
 {
+    // Active GPS primary as a 2-bit field: 0 = unknown, 1 = FC, 2 = external.
+    const int gpsPrimary = gpsSourceSwitcher.getCurrentPrimary();
+    const int gpsSource = gpsPrimary < 0 ? 0 : gpsPrimary + 1;
+
     const int status = 0 |
         (magsReceivedCounter.count > 0 ? STATUS_BIT_MAGS_ONLINE : 0) |
         (gpsFixed ? STATUS_BIT_GPS_ONLINE : 0) |
@@ -196,7 +212,8 @@ void MagsLogger::sendStatus()
         (outAccelDetected ? STATUS_BIT_OUT_ACCEL : 0) |
         (MagsLogger::MAGS_FULL_TRACE_ENABLED ? STATUS_BIT_FULL_TRACE_ENEBLED : 0) |
         (MagsLogger::DEBUG_OUT_ENABLED ? STATUS_BIT_DEBUG_ENABLED : 0) |
-        ((gpsOnOffSwitcher.getGpsRequestResult() << STATUS_BIT_GPS_REQUEST_RESULT_SHIFT) & STATUS_BIT_GPS_REQUEST_RESULT_MASK)
+        ((gpsOnOffSwitcher.getGpsRequestResult() << STATUS_BIT_GPS_REQUEST_RESULT_SHIFT) & STATUS_BIT_GPS_REQUEST_RESULT_MASK) |
+        ((gpsSource << STATUS_BIT_GPS_SOURCE_SHIFT) & STATUS_BIT_GPS_SOURCE_MASK)
     ;
 
     const int logoutTime = logStarted ? (TimeUtils::getTime() - logStartedTime) / 1000 : 0;

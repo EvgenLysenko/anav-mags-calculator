@@ -27,12 +27,14 @@ MAGS_SRCS =\
     mags_logger.cpp\
     mags_calculator.cpp\
     mags_dispatcher.cpp\
-    gps_on_off_switcher.cpp
+    gps_on_off_switcher.cpp\
+    gps_source_switcher.cpp
 MAGS_DEPS = \
     $(MAGS_DIR)/nmea_sentence_reader.h\
     $(MAGS_DIR)/mags_logger.h\
     $(MAGS_DIR)/mags_calculator.h\
-    $(MAGS_DIR)/gps_on_off_switcher.h
+    $(MAGS_DIR)/gps_on_off_switcher.h\
+    $(MAGS_DIR)/gps_source_switcher.h
 MAGS_OBJS := $(MAGS_SRCS:%.cpp=$(BUILD_DIR)/mags-logger-%.o)
 
 UTILS_DIR = $(SRC_DIR)/utils

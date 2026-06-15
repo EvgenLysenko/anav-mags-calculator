@@ -10,13 +10,19 @@
 #include "mags-logger/mags_calculator.h"
 #include "ip.h"
 
-void segHandler(int sig)
+void sigsegHandler(int sig)
 {
-    fprintf(stderr, "Error: signal %d", sig);
+    fprintf(stderr, "Error: SIGSEGV signal %d\n", sig);
 
     void* arr[10];
     size_t size = backtrace(arr, sizeof(arr) / sizeof(*arr));
     backtrace_symbols_fd(arr, size, STDERR_FILENO);
+    exit(0);
+}
+
+void sigpipeHandler(int sig)
+{
+    fprintf(stderr, "Error: SIGPIPE signal %d\n", sig);
     exit(0);
 }
 
@@ -57,11 +63,12 @@ static Connection* createConnection(const char* name, const Connection::Credenti
 
 int main(int argc, char* argv[])
 {
-    signal(SIGSEGV, segHandler);
+    signal(SIGSEGV, sigsegHandler);
+    signal(SIGPIPE, sigpipeHandler);
 
     logsInit(argc, argv);
 
-    logInfo("Mags - v2.3");
+    logInfo("Mags - v2.3.1");
 
     // mavlink
     Connection::Credentials credentials;

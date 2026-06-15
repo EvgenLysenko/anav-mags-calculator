@@ -36,18 +36,21 @@ MagsLogger::MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider*
     TaskBase(),
     nmeaSentenceSender(nmeaSentenceSender),
     mavlinkProvider(mavlinkProvider),
-    gpsOnOffSwitcher(mavlinkProvider)
+    gpsOnOffSwitcher(mavlinkProvider),
+    gpsSourceSwitcher(mavlinkProvider)
 {
     ccrGetRequester.init(nmeaSentenceSender);
     ccrSetRequester.init(nmeaSentenceSender);
     outSetCommandRequester.init(nmeaSentenceSender);
     mavlinkProvider->addMavlinkReceiver(&gpsOnOffSwitcher);
+    mavlinkProvider->addMavlinkReceiver(&gpsSourceSwitcher);
     mavlinkProvider->addMavlinkReceiver(this);
 }
 
 MagsLogger::~MagsLogger()
 {
     mavlinkProvider->remMavlinkReceiver(&gpsOnOffSwitcher);
+    mavlinkProvider->remMavlinkReceiver(&gpsSourceSwitcher);
     mavlinkProvider->remMavlinkReceiver(this);
 }
 
@@ -286,6 +289,7 @@ void MagsLogger::onStarted()
 
     initParams();
     gpsOnOffSwitcher.init();
+    gpsSourceSwitcher.init();
 }
 
 void MagsLogger::initParams()
@@ -458,6 +462,8 @@ __useconds_t MagsLogger::loop(__useconds_t default_timeout)
     if (gpsOnOffSwitcher.isFinished()) {
         // TODO check if the command was successful
     }
+
+    gpsSourceSwitcher.loop();
 
     return magsInitialized || logStarted ? RUN_THREAD_TIMEOUT_IN_PROGRESS : default_timeout;
 }
