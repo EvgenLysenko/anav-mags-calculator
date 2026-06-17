@@ -9,17 +9,21 @@ public:
 
 protected:
     long period = 0;
-    int count = STOPPED;
+    int countLeft = STOPPED;
     long time = 0;
 
 public:
-    TimeTrigger() : period(0), count(STOPPED), time(0) {}
-    TimeTrigger(long period, int count = INFINITE, bool startImmediately = false);
-    void start(long period, int count = INFINITE, bool startImmediately = false);
+    TimeTrigger() : period(0), countLeft(STOPPED), time(0) {}
+    TimeTrigger(long period, int countLeft = INFINITE, bool startImmediately = false);
+    TimeTrigger(long period, bool startImmediately);
+    void start(long period, int countLeft = INFINITE, bool startImmediately = false);
     bool isFired();
     bool isFired(long curTime);
-    bool isFinished() const { return count == STOPPED; }
-    void stop() { count = STOPPED; }
+    bool isFinished() const { return countLeft == STOPPED; }
+    void stop() { countLeft = STOPPED; }
+
+    long getPreiod() const { return period; }
+    long getCountLeft() const { return countLeft; }
 };
 
 #endif

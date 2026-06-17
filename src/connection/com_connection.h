@@ -8,6 +8,7 @@ class ComConnection: public Connection
 protected:
     int fd;
     int connectionResult;
+    int currentBaud = 0;
 
 public:
     ComConnection(const Connection::Credentials& credentials);
@@ -18,6 +19,8 @@ public:
     virtual bool isConnected() const { return fd >= 0 && connectionResult == 0; }
     virtual int send(const unsigned char* buf, int size);
     virtual int read(unsigned char* buf, int size);
+    virtual int getPort() const { return currentBaud > 0 ? currentBaud : credentials.port; }
+    virtual bool setPort(int baud);
 
     bool setup_port(int baud, int data_bits, int stop_bits, bool parity, bool hardware_control);
 };

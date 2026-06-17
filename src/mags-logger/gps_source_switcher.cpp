@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cmath>
 
-const bool _GPS_TEST_ENABLED = true;
+const bool _GPS_TEST_ENABLED = false;
 
 static const char* GPS_AUTO_SWITCH_PARAM_NAME = "GPS_AUTO_SWITCH";
 static const char* GPS_PRIMARY_PARAM_NAME = "GPS_PRIMARY";
@@ -133,11 +133,11 @@ void GpsSourceSwitcher::requestGpsSource(GpsSource source, int primary)
 
 void GpsSourceSwitcher::on_msg_gps_raw_received(const mavlink_message_t* message)
 {
-    //const uint8_t fix_type = mavlink_msg_gps_raw_int_get_fix_type(message);
-    mavlink_gps_raw_int_t gps_raw_int;
-    mavlink_msg_gps_raw_int_decode(message, &gps_raw_int);
-
     if (_GPS_TEST_ENABLED) {
+        //const uint8_t fix_type = mavlink_msg_gps_raw_int_get_fix_type(message);
+        mavlink_gps_raw_int_t gps_raw_int;
+        mavlink_msg_gps_raw_int_decode(message, &gps_raw_int);
+
         mavlink_gps_input_t gps_input = {0};
         gps_input.time_usec = gps_raw_int.time_usec;
         gps_input.gps_id = 1;

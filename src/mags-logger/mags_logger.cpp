@@ -27,9 +27,9 @@ static const long LOG_OUT_PERIOD_MIN = 1000;
 const unsigned short MAGS_CCR_DEFAULT = 100;
 const unsigned short MAGS_CCR_MAX = 0xFFFF;
 
-static const long STATUS_SEND_PERIOD = 1000;
+static const long STATUS_SEND_PERIOD = 2000;
 static const long SENSORS_SEND_PERIOD = 5000;
-static const long SETTINGS_SEND_PERIOD = 10000;
+static const long SETTINGS_SEND_PERIOD = 15000;
 static const long MAGS_VALUES_SEND_PERIOD = 3000; 
 
 MagsLogger::MagsLogger(INmeaSentenceSender* nmeaSentenceSender, MavlinkProvider* mavlinkProvider):

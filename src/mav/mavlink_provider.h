@@ -112,13 +112,16 @@ public:
     // Inject a GPS reading into the autopilot as GPS instance gpsId (GPS_INPUT, msg 232).
     // Used to feed the companion-computer GPS to the flight controller. By default
     // velocity/accuracy/DOP fields are flagged as ignored (only position is provided).
+    // timeWeek/timeWeekMs carry the GPS time of the sample; leave them 0 if unknown
+    // (the autopilot will then timestamp the sample on arrival).
     void sendGpsInput(uint8_t gpsId, uint8_t fixType, int32_t lat, int32_t lon, float alt,
         uint8_t satellitesVisible, float hdop = 0, float vdop = 0,
         float vn = 0, float ve = 0, float vd = 0,
         uint16_t ignoreFlags = GPS_INPUT_IGNORE_FLAG_HDOP | GPS_INPUT_IGNORE_FLAG_VDOP |
             GPS_INPUT_IGNORE_FLAG_VEL_HORIZ | GPS_INPUT_IGNORE_FLAG_VEL_VERT |
             GPS_INPUT_IGNORE_FLAG_SPEED_ACCURACY | GPS_INPUT_IGNORE_FLAG_HORIZONTAL_ACCURACY |
-            GPS_INPUT_IGNORE_FLAG_VERTICAL_ACCURACY);
+            GPS_INPUT_IGNORE_FLAG_VERTICAL_ACCURACY,
+        uint16_t timeWeek = 0, uint32_t timeWeekMs = 0);
 
     void sendGuidedPosition(double lat, double lon, float alt);
     void sendGuidedPosition(double lat, double lon, float alt, MAV_FRAME mav_frame);

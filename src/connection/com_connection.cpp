@@ -122,6 +122,7 @@ bool ComConnection::connect()
             close(fd);
     }
     else {
+        currentBaud = credentials.port;
         logInfo("ComConnection - connected to port %s with baud %d, 8 data bits, no parity, 1 stop bit (8N1)", credentials.address.c_str(), credentials.port);
     } 
 
@@ -134,6 +135,25 @@ void ComConnection::disconnect()
 {
     if (fd >= 0)
         close(fd);
+
+    fd = -1;
+    currentBaud = 0;
+}
+
+bool ComConnection::setPort(int baud)
+{
+    if (fd < 0)
+        return false;
+
+    connectionResult = set_interface_attribs(fd, baud, 0);
+    if (connectionResult != 0) {
+        logError("ComConnection - failed to change baud to %d", baud);
+        return false;
+    }
+
+    currentBaud = baud;
+    logInfo("ComConnection - baud changed to %d on %s", baud, credentials.address.c_str());
+    return true;
 }
 
 int ComConnection::send(const unsigned char* data, int size)

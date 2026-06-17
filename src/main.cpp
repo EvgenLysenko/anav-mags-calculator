@@ -8,6 +8,7 @@
 #include "mags-logger/mags_logger.h"
 #include "mags-logger/nmea_sentence_reader.h"
 #include "mags-logger/mags_calculator.h"
+#include "mags-logger/gps_input_task.h"
 #include "ip.h"
 
 void sigsegHandler(int sig)
@@ -102,6 +103,17 @@ int main(int argc, char* argv[])
     magsLogger.setMagsDataListener(&magsCalculator);
     magsCalculator.start();
 
+    // companion-computer GPS (uBlox NEO-M8N on UART7) -> flight controller (GPS_INPUT)
+    credentials.type = Config::readString("gps/connection/type", Connection::Credentials::COM);
+    credentials.address = Config::readString("gps/connection/address", "/dev/ttyS7");
+    const int gpsTargetBaud = Config::readInt("gps/connection/port", 115200);
+    const int gpsInitialBaud = Config::readInt("gps/initialBaud", 9600);
+    credentials.port = gpsInitialBaud > 0 ? gpsInitialBaud : gpsTargetBaud;
+
+    Connection* gpsConnection = createConnection("gps", credentials);
+    GpsInputTask gpsInputTask(gpsConnection, &mavlinkProvider);
+    gpsInputTask.start();
+
     const uint32_t ip = getIp();
     logInfo("ip: %d.%d.%d.%d", (int)(ip & 0xFF), (int)((ip >> 8) & 0xFF), (int)((ip >> 16) & 0xFF), (int)((ip >> 24) & 0xFF));
     magsLogger.ip = ip;
@@ -122,9 +134,16 @@ int main(int argc, char* argv[])
 
     logInfo("stop");
 
+    gpsInputTask.stop();
+
     if (magsConnection) {
         magsConnection->disconnect();
         delete magsConnection;
+    }
+
+    if (gpsConnection) {
+        gpsConnection->disconnect();
+        delete gpsConnection;
     }
 
     logInfo("exit");

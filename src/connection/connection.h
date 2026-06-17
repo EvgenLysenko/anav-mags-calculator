@@ -32,6 +32,9 @@ public:
     virtual bool isConnected() const = 0;
     virtual int send(const unsigned char* buf, int size) = 0;
     virtual int read(unsigned char* buf, int size) = 0;
+
+    virtual int getPort() const { return credentials.port; }
+    virtual bool setPort(int baud) { return false; }
 };
 
 class ConnectionFactory

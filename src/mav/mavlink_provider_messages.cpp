@@ -190,7 +190,8 @@ void MavlinkProvider::sendDoAuxFunction(int auxFunction, int switchPos)
 }
 
 void MavlinkProvider::sendGpsInput(uint8_t gpsId, uint8_t fixType, int32_t lat, int32_t lon, float alt,
-    uint8_t satellitesVisible, float hdop, float vdop, float vn, float ve, float vd, uint16_t ignoreFlags)
+    uint8_t satellitesVisible, float hdop, float vdop, float vn, float ve, float vd, uint16_t ignoreFlags,
+    uint16_t timeWeek, uint32_t timeWeekMs)
 {
     if (!isPlaneReady()) {
         logWarning("send GPS_INPUT: plane not ready");
@@ -201,6 +202,8 @@ void MavlinkProvider::sendGpsInput(uint8_t gpsId, uint8_t fixType, int32_t lat, 
     gps_input.time_usec = 0;  // 0: autopilot timestamps the sample on arrival
     gps_input.gps_id = gpsId;
     gps_input.ignore_flags = ignoreFlags;
+    gps_input.time_week = timeWeek;
+    gps_input.time_week_ms = timeWeekMs;
     gps_input.fix_type = fixType;
     gps_input.lat = lat;
     gps_input.lon = lon;
@@ -213,8 +216,8 @@ void MavlinkProvider::sendGpsInput(uint8_t gpsId, uint8_t fixType, int32_t lat, 
     gps_input.satellites_visible = satellitesVisible;
     gps_input.yaw = 0;  // 0: yaw not available
 
-    logInfo("send GPS_INPUT: to %d/%d  gps_id: %d  fix: %d  lat: %d  lon: %d  alt: %.1f  sats: %d",
-        plane_system_id, plane_component_id, gpsId, fixType, lat, lon, alt, satellitesVisible);
+    //logInfo("send GPS_INPUT: to %d/%d  gps_id: %d  fix: %d  lat: %d  lon: %d  alt: %.1f  sats: %d",
+    //    plane_system_id, plane_component_id, gpsId, fixType, lat, lon, alt, satellitesVisible);
 
     mavlink_message_t message;
     mavlink_msg_gps_input_encode(compSystemId, compComponentId, &message, &gps_input);
